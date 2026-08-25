@@ -26,7 +26,12 @@ class SluggedModel(models.Model):
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
 
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=50, unique=True)
 
+    def __str__(self):
+        return self.name
 
 # ///////////////////////////////
 # /// Constant specifications ///
@@ -37,13 +42,22 @@ LANGUAGES = [
     ("en", "English"),
 ]
 
+SNS_TAGS = [
+    ("sfx","Sound effect"),
+    ("instrument", "Instrument"),
+    ("field_rec", "Field Recording"),
+    ("drums","Drums"),
+    ("perc", "Percussion"),
+    ("melodic", "Melodic instrument"),
+]
+
 ARTICLE_CATEGORIES = [
-    ("blog", "blog post"), 
-    ("game_review","game review"),
-    ("music_review","music review"), 
-    ("film_review","film review"), 
-    ("tv_review","tv review"), 
-    ("project_writeup","project writeup"),
+    ("blog", "Blog post"), 
+    ("game_review","Game review"),
+    ("music_review","Music review"), 
+    ("film_review","Film review"), 
+    ("tv_review","TV review"), 
+    ("project_writeup","Project writeup"),
 ]
 
 YOUTUBE_VIDEO_CATEGORIES = [
@@ -52,6 +66,9 @@ YOUTUBE_VIDEO_CATEGORIES = [
     ("vlog","vlog"),
     ("commentary","commentary"),
 ]
+
+
+
 
 # ///////////////////////////////////////
 # ///// Actually usable data models /////
@@ -63,7 +80,8 @@ YOUTUBE_VIDEO_CATEGORIES = [
 class SoundsAndScapesPack(PublishableModel,SluggedModel):
     title = models.CharField(max_length=255)
     cover_image_url = models.URLField(blank=True)
-    external_url = models.URLField()
+    external_url = models.URLField(help_text="Link to where the sample pack is downloadable from")
+    tags = models.ManyToManyField(Tag, blank=True, related_name="sns_samplepacks")
     file_list = models.JSONField(default=dict, blank=True)
     release_date = models.DateField()
     likes = models.IntegerField(default=0)
@@ -75,16 +93,14 @@ class SoundsAndScapesPack(PublishableModel,SluggedModel):
     def __str__(self):
         return self.title
 
-class SoundsAndScapesPackTranslation(models.Model):
+class SoundsAndScapesPackDescription(models.Model):
     snspack = models.ForeignKey(SoundsAndScapesPack, related_name="translations", on_delete=models.CASCADE)
     language = models.CharField(max_length=3, choices=LANGUAGES)
     description = models.TextField(blank=True)
-    tags = models.CharField(max_length=255, blank=True, help_text="Comma-separated tags")
 
     class Meta:
         unique_together = ("snspack","language")
         verbose_name_plural = "Sounds and Scapes -sample pack translations"
-
 
     def __str__(self):
         return f"{self.snspack_id} [{self.language}]"
@@ -95,6 +111,7 @@ class SoundsAndScapesPackTranslation(models.Model):
 class MusicRelease(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
     cover_image_url = models.URLField(blank=True)
+    tags = models.ManyToManyField(Tag, blank=True, related_name="music_release")
     streaming_links = models.JSONField(default=dict, blank=True)
     release_date = models.DateField()
     likes = models.IntegerField(default=0)
@@ -108,7 +125,6 @@ class MusicRelease(PublishableModel, SluggedModel):
 class MusicReleaseTranslation(models.Model):
     release = models.ForeignKey(MusicRelease, related_name="translations", on_delete=models.CASCADE)
     language = models.CharField(max_length=3, choices=LANGUAGES)
-    tags = models.CharField(max_length=255,blank=True,help_text="Comma-separated tags (genres and the like)")
     description = models.TextField(blank=True)
 
     class Meta:
@@ -124,7 +140,8 @@ class MusicReleaseTranslation(models.Model):
 class Video(PublishableModel):
     youtube_id = models.CharField(max_length=11, unique=True) # NOTE: Possible point of failure in the future if YouTube changes its implementation
     title = models.CharField(max_length=255)
-    category = models.CharField(max_length=100, blank=True, choices=YOUTUBE_VIDEO_CATEGORIES) # NOTE: if this needs to be translated, do it in frontend
+    category = models.CharField(max_length=100, blank=True, choices=YOUTUBE_VIDEO_CATEGORIES)
+    tags = models.ManyToManyField(Tag, blank=True, related_name="youtube_videos")
     video_language = models.CharField(max_length=3, choices=LANGUAGES) # NOTE: communicates what language the video itself is in ,not the metadata
     published_date = models.DateField()
     likes = models.IntegerField(default=0)
@@ -139,7 +156,6 @@ class VideoTranslation(models.Model):
     youtube_video = models.ForeignKey(Video, related_name="translations", on_delete=models.CASCADE)
     language = models.CharField(max_length=3, choices=LANGUAGES)
     translated_title = models.TextField(blank=True)
-    tags = models.CharField(max_length=255,blank=True,help_text="Tags for the video")
     description = models.TextField(blank=True)
 
     class Meta:
@@ -157,7 +173,9 @@ class Article(PublishableModel, SluggedModel):
     article_image_url = models.URLField(blank=True)
     article_category = models.CharField(choices=ARTICLE_CATEGORIES)
     external_url = models.URLField(blank=True) # If the article is a link to somewhere else
+    tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
     published_date = models.DateField()
+    article_extras = models.JSONField(default=dict, blank=True)
     likes = models.IntegerField(default=0)
 
     class Meta:

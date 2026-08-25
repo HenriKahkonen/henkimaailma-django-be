@@ -1,15 +1,25 @@
 from django.contrib import admin
-from .models import SoundsAndScapesPack, SoundsAndScapesPackTranslation, MusicRelease, MusicReleaseTranslation, Video, VideoTranslation, Article, ArticleTranslation, ChangelogEntry, ChangelogEntryTranslation
+from django import forms
+from .models import SoundsAndScapesPack, SoundsAndScapesPackDescription, MusicRelease, MusicReleaseTranslation, Video, VideoTranslation, Article, ArticleTranslation, ChangelogEntry, ChangelogEntryTranslation
+from .widgets import TagWidget
 
 ### SNS PACKS ADMIN ###
 
-class SnsPackTranslationInline(admin.TabularInline):
-    model = SoundsAndScapesPackTranslation
+class SnSReleaseForm(forms.ModelForm):
+    class Meta:
+        model = SoundsAndScapesPack
+        fields = "__all__"
+        widgets = {"tags" : TagWidget}
+
+class SnsPackDescInline(admin.TabularInline):
+    '''Language-specific description of a SnS sample pack.'''
+    model = SoundsAndScapesPackDescription
     extra = 1
 
 @admin.register(SoundsAndScapesPack)
 class SnSPackAdmin(admin.ModelAdmin):
-    inlines = [SnsPackTranslationInline]
+    form = SnSReleaseForm
+    inlines = [SnsPackDescInline]
     list_display = ("title", "release_date", "published", "likes")
     list_filter = ("published",)
     search_fields = ("title",)
@@ -17,12 +27,19 @@ class SnSPackAdmin(admin.ModelAdmin):
 
 ### MUSIC RELEASES ADMIN ###
 
+class MusicReleaseForm(forms.ModelForm):
+    class Meta:
+        model = MusicRelease
+        fields = "__all__"
+        widgets = {"tags" : TagWidget}
+
 class MusicReleaseTranslationInline(admin.TabularInline):
     model = MusicReleaseTranslation
     extra = 1
 
 @admin.register(MusicRelease)
 class MusicReleaseAdmin(admin.ModelAdmin):
+    form = MusicReleaseForm
     inlines = [MusicReleaseTranslationInline]
     list_display = ("title", "release_date", "published")
     list_filter = ("published",)
@@ -31,12 +48,19 @@ class MusicReleaseAdmin(admin.ModelAdmin):
 
 ### VIDEOS ADMIN ###
 
+class VideoForm(forms.ModelForm):
+    class Meta:
+        model = Video
+        fields = "__all__"
+        widgets = {"tags" : TagWidget}
+
 class VideoTranslationInLine(admin.TabularInline):
     model = VideoTranslation
     extra = 1
 
 @admin.register(Video)
 class VideoAdmin(admin.ModelAdmin):
+    form = VideoForm
     inlines = [VideoTranslationInLine]
     list_display = ("title", "youtube_id", "published_date", "published")
     list_filter = ("published",)
@@ -44,12 +68,19 @@ class VideoAdmin(admin.ModelAdmin):
 
 ### ARTICLES ADMIN ###
 
+class ArticleForm(forms.ModelForm):
+    class Meta:
+        model = Article
+        fields = "__all__"
+        widgets = {"tags" : TagWidget}
+
 class ArticleTranslationInline(admin.TabularInline):
     model = ArticleTranslation
     extra = 1
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
+    form = ArticleForm
     inlines = [ArticleTranslationInline]
     list_display = ("title", "published_date", "updated_at", "published", "article_category", "external_url")
     list_filter = ("published",)
