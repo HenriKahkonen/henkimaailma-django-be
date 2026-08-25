@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.authentication import BasicAuthentication
 from rest_framework import status
 
-from .models import Video, VideoTranslation, Tag
+from .models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation
 
 ####################################
 ## Reusable funcs 
@@ -22,10 +22,10 @@ def get_or_create_tag(name):
 ########################################
 ######### LEGACY IMPORT VIEWS ##########
 ########################################
-###### Comment these out after the #####
+###### Feel free to ####################
+###### comment these out after the #####
 ##### operation has been completed #####
 ########################################
-
 
 CATEGORY_MAPPING_YOUTUBE = {
         "peliarviot" : "game_review",
@@ -35,10 +35,7 @@ CATEGORY_MAPPING_YOUTUBE = {
     }
 
 class LegacyVideoImportView(APIView):
-    """
-    One-shot bulk import from the old JSON structure.
-    POST body: the full legacy JSON object, e.g. {"peliarviot": [...], "vlogit": [...]}
-    """
+
     authentication_classes = [BasicAuthentication]
     permission_classes = [IsAdminUser]
 
@@ -92,6 +89,98 @@ class LegacyVideoImportView(APIView):
                 video.tags.set(tag_objs)
 
                 (created if was_created else updated).append(ytid)
+
+        return Response(
+            {"created": created, "updated": updated, "skipped": skipped},
+            status=status.HTTP_200_OK,
+        )
+
+
+LICENCE_MAPPING = {
+    "CC0" : "cc0"
+}
+
+class LegacySnSPackImportView(APIView):
+
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        payload = request.data
+        created, updated, skipped = [], [], []
+
+        for category_key, entries in payload.items():
+
+            for entry in entries:
+
+                if category_key == "Changelog":
+                    date_str = entry.get("Date")
+                    published_date = (
+                        datetime.fromisoformat(date_str.replace("Z", "+00:00")).date()
+                        if date_str else None
+                    )
+                    contents_array = entry.get("Contents")
+                    contents_markdown_string = ""
+                    for item in contents_array:
+                        contents_markdown_string += f"- {item} \n"
+
+                    # old data didn't have titles for sns changelog
+                    new_title = published_date
+
+                    changelogentry, was_created = SnSChangelogEntry.objects.update_or_create(
+                        date = published_date,
+                        defaults={
+                            "title": new_title,
+                        },
+                    )
+
+                    SnSChangelogEntryTranslation.objects.update_or_create(
+                        changelog_entry = changelogentry,
+                        language = "en",
+                        defaults = {
+                            "body_markdown" : contents_markdown_string,
+                        }
+                    )
+
+                    (created if was_created else updated).append(new_title)
+
+                elif category_key == "Packs":
+
+                    date_str = entry.get("Date")
+                    published_date = (
+                        datetime.fromisoformat(date_str.replace("Z", "+00:00")).date()
+                        if date_str else None
+                    )
+
+                    updated_str = entry.get("UpDated")
+                    updated_date = (
+                        datetime.fromisoformat(updated_str.replace("Z", "+00:00")).date()
+                        if updated_str else published_date
+                    )
+
+                    samplepack, was_created = SoundsAndScapesPack.objects.update_or_create(
+                        title = entry.get("Name",""),
+                        defaults={
+                            "cover_image_url": entry.get("Img", ""),
+                            "external_url": entry.get("DownloadLink",""),
+                            "release_date": published_date,
+                            "updated_date": updated_date,
+                            "licence": LICENCE_MAPPING.get(entry.get("Licence"), "all_rights_reserved"), # all imported legacy packs have cc0
+                            "file_list": entry.get("FileListing", []),
+
+                            "published": True,
+                        }
+                    )
+
+                    SoundsAndScapesPackDescription.objects.update_or_create(
+                        snspack=samplepack,
+                        language="en",
+                        defaults={
+                            "description": entry.get("Desc",""),
+                        },
+                    )
+
+                    (created if was_created else updated).append(entry.get("Name"))
 
         return Response(
             {"created": created, "updated": updated, "skipped": skipped},

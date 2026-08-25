@@ -51,6 +51,11 @@ SNS_TAGS = [
     ("melodic", "Melodic instrument"),
 ]
 
+SNS_LICENCES = [
+    ("cc0", "CC0 Creative Commons Licence"),
+    ("all_rights_reserved","All rights reserved")
+]
+
 ARTICLE_CATEGORIES = [
     ("blog", "Blog post"), 
     ("game_review","Game review"),
@@ -68,8 +73,6 @@ YOUTUBE_VIDEO_CATEGORIES = [
 ]
 
 
-
-
 # ///////////////////////////////////////
 # ///// Actually usable data models /////
 # ///////////////////////////////////////
@@ -81,9 +84,11 @@ class SoundsAndScapesPack(PublishableModel,SluggedModel):
     title = models.CharField(max_length=255)
     cover_image_url = models.URLField(blank=True)
     external_url = models.URLField(help_text="Link to where the sample pack is downloadable from")
+    licence = models.CharField(max_length=255, choices=SNS_LICENCES,default="all_rights_reserved")
     tags = models.ManyToManyField(Tag, blank=True, related_name="sns_samplepacks")
     file_list = models.JSONField(default=dict, blank=True)
     release_date = models.DateField()
+    updated_date = models.DateField()
     likes = models.IntegerField(default=0)
 
     class Meta:
@@ -104,6 +109,27 @@ class SoundsAndScapesPackDescription(models.Model):
 
     def __str__(self):
         return f"{self.snspack_id} [{self.language}]"
+
+class SnSChangelogEntry(PublishableModel):
+    date = models.DateField()
+    title = models.CharField(max_length=255)
+
+    class Meta:
+        ordering = ["-date"]
+        verbose_name_plural = "Sounds and Scapes -changelog entries"
+
+    def __str__(self):
+        return f"{self.date} — {self.title}"
+
+class SnSChangelogEntryTranslation(models.Model):
+    changelog_entry = models.ForeignKey(SnSChangelogEntry, related_name="translations", on_delete=models.CASCADE)
+    language = models.CharField(max_length=3, choices=LANGUAGES)
+    body_markdown = models.TextField()
+    tags = models.CharField(max_length=255, blank=True, help_text="Comma-separated")
+
+    class Meta:
+        verbose_name_plural = "SnS Changelog Entries"
+        unique_together = ("changelog_entry", "language")
 
 
 ### MUSIC RELEASES
@@ -214,13 +240,13 @@ class ChangelogEntry(PublishableModel):
         return f"{self.date} — {self.title}"
 
 class ChangelogEntryTranslation(models.Model):
-    changelogEntry = models.ForeignKey(ChangelogEntry, related_name="translations", on_delete=models.CASCADE)
+    changelog_entry = models.ForeignKey(ChangelogEntry, related_name="translations", on_delete=models.CASCADE)
     language = models.CharField(max_length=3, choices=LANGUAGES)
     body_markdown = models.TextField()
     tags = models.CharField(max_length=255, blank=True, help_text="Comma-separated")
 
     class Meta:
         verbose_name_plural = "changelog entries"
-        unique_together = ("changelogEntry", "language")
+        unique_together = ("changelog_entry", "language")
 
 

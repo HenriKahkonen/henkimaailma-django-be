@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from content.views import LegacyVideoImportView
+from content.views import LegacyVideoImportView, LegacySnSPackImportView
 from django.conf import settings
 
 
@@ -26,7 +26,17 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    from content.views import LegacyVideoImportView
-    urlpatterns += [
-        path('api/import/legacy-videos/', LegacyVideoImportView.as_view()),
-    ]
+    try:
+        from content.views import LegacyVideoImportView
+        urlpatterns += [
+            path('api/import/legacy-videos/', LegacyVideoImportView.as_view()),
+        ]
+    except ImportError:
+        pass
+    try:
+        from content.views import LegacySnSPackImportView
+        urlpatterns += [
+            path('api/import/legacy-sns-packs/', LegacySnSPackImportView.as_view()),
+        ]
+    except ImportError:
+        pass

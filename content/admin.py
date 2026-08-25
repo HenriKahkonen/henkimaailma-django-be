@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django import forms
-from .models import SoundsAndScapesPack, SoundsAndScapesPackDescription, MusicRelease, MusicReleaseTranslation, Video, VideoTranslation, Article, ArticleTranslation, ChangelogEntry, ChangelogEntryTranslation
+from .models import SoundsAndScapesPack, SoundsAndScapesPackDescription, SnSChangelogEntry, SnSChangelogEntryTranslation, MusicRelease, MusicReleaseTranslation, Video, VideoTranslation, Article, ArticleTranslation, ChangelogEntry, ChangelogEntryTranslation
 from .widgets import TagWidget
 
 ### SNS PACKS ADMIN ###
@@ -20,10 +20,21 @@ class SnsPackDescInline(admin.TabularInline):
 class SnSPackAdmin(admin.ModelAdmin):
     form = SnSReleaseForm
     inlines = [SnsPackDescInline]
-    list_display = ("title", "release_date", "published", "likes")
+    list_display = ("title", "release_date", "updated_date", "published", "likes")
     list_filter = ("published",)
     search_fields = ("title",)
     prepopulated_fields = {"slug": ("title",)}
+
+class SnSChangelogEntryTranslationInline(admin.TabularInline):
+    model = SnSChangelogEntryTranslation
+    extra = 1
+
+@admin.register(SnSChangelogEntry)
+class SnSChangelogEntryAdmin(admin.ModelAdmin):
+    inlines = [SnSChangelogEntryTranslationInline]
+    list_display = ("date", "title", "published")
+    list_filter = ("published",)
+    search_fields = ("title", "body_markdown", "tags")
 
 ### MUSIC RELEASES ADMIN ###
 
