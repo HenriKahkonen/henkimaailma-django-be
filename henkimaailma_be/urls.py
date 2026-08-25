@@ -40,3 +40,10 @@ if settings.DEBUG:
         ]
     except ImportError:
         pass
+    try:
+        from content.views import LegacyChangelogImportView
+        urlpatterns += [
+            path('api/import/legacy-changelog/', LegacyChangelogImportView.as_view())
+        ]
+    except ImportError:
+        pass

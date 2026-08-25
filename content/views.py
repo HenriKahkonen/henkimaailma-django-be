@@ -1,13 +1,15 @@
 from django.shortcuts import render
-from datetime import datetime
+from datetime import datetime, date as date_cls
 from django.utils.text import slugify
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from rest_framework.authentication import BasicAuthentication
 from rest_framework import status
+import xml.etree.ElementTree as ET
+from .parsers import RawParser
 
-from .models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation
+from .models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation, ChangelogEntry, ChangelogEntryTranslation
 
 ####################################
 ## Reusable funcs 
@@ -26,6 +28,8 @@ def get_or_create_tag(name):
 ###### comment these out after the #####
 ##### operation has been completed #####
 ########################################
+
+## Legacy YouTube video import
 
 CATEGORY_MAPPING_YOUTUBE = {
         "peliarviot" : "game_review",
@@ -95,6 +99,7 @@ class LegacyVideoImportView(APIView):
             status=status.HTTP_200_OK,
         )
 
+# Legacy SnS pack import
 
 LICENCE_MAPPING = {
     "CC0" : "cc0"
@@ -181,6 +186,56 @@ class LegacySnSPackImportView(APIView):
                     )
 
                     (created if was_created else updated).append(entry.get("Name"))
+
+        return Response(
+            {"created": created, "updated": updated, "skipped": skipped},
+            status=status.HTTP_200_OK,
+        )
+
+# Legacy Changelog import (XML)
+
+class LegacyChangelogImportView(APIView):
+    '''
+    NOTE: The encoding declaration in the legacy XML needs to be changed from UTF-16 to UTF-8
+    '''
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAdminUser]
+    parser_classes = [RawParser]
+
+    def post(self, request):
+        created, updated, skipped = [], [], []
+
+        try:
+            root = ET.fromstring(request.body)
+        except ET.ParseError as e:
+            return Response({"error": f"Invalid XML: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        for update in root.findall("update"):
+            title = update.get("title", "")
+            date_str = update.get("date", "")
+
+            try:
+                year, month, day = (int(part) for part in date_str.split("-"))
+                entry_date = date_cls(year, month, day)
+            except (ValueError, TypeError):
+                skipped.append(f"{title} (bad date: {date_str!r})")
+                continue
+
+            items = [li.text.strip() for li in update.findall("li") if li.text and li.text.strip()]
+            body_markdown = "\n".join(f"- {item}" for item in items)
+
+            entry, was_created = ChangelogEntry.objects.update_or_create(
+                date=entry_date,
+                defaults={"title": title, "published": True},
+            )
+
+            ChangelogEntryTranslation.objects.update_or_create(
+                changelog_entry=entry,
+                language="fi",
+                defaults={"body_markdown": body_markdown},
+            )
+
+            (created if was_created else updated).append(f"{entry_date} — {title}")
 
         return Response(
             {"created": created, "updated": updated, "skipped": skipped},
