@@ -16,8 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from content.views import LegacyVideoImportView
+from django.conf import settings
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('select2/', include('django_select2.urls')),
 ]
+
+if settings.DEBUG:
+    from content.views import LegacyVideoImportView
+    urlpatterns += [
+        path('api/import/legacy-videos/', LegacyVideoImportView.as_view()),
+    ]

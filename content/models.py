@@ -61,10 +61,10 @@ ARTICLE_CATEGORIES = [
 ]
 
 YOUTUBE_VIDEO_CATEGORIES = [
-    ("game_review","game review"),
-    ("video_essay","video essay"),
-    ("vlog","vlog"),
-    ("commentary","commentary"),
+    ("game_review","Game review"),
+    ("video_essay","Video essay"),
+    ("vlog","Vlog"),
+    ("commentary","Commentary video"),
 ]
 
 
@@ -139,10 +139,11 @@ class MusicReleaseTranslation(models.Model):
 
 class Video(PublishableModel):
     youtube_id = models.CharField(max_length=11, unique=True) # NOTE: Possible point of failure in the future if YouTube changes its implementation
-    title = models.CharField(max_length=255)
-    category = models.CharField(max_length=100, blank=True, choices=YOUTUBE_VIDEO_CATEGORIES)
-    tags = models.ManyToManyField(Tag, blank=True, related_name="youtube_videos")
-    video_language = models.CharField(max_length=3, choices=LANGUAGES) # NOTE: communicates what language the video itself is in ,not the metadata
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    internal_title = models.CharField(max_length=255)
+    category = models.CharField(max_length=100, blank=True, choices=YOUTUBE_VIDEO_CATEGORIES) #NOTE: if this needs translating, do it in frontend
+    tags = models.ManyToManyField(Tag, blank=True, related_name="youtube_videos") #NOTE: if this needs translating, do it in frontend
+    video_language = models.CharField(max_length=3, choices=LANGUAGES, blank=True) # NOTE: communicates what language the video itself is in ,not the metadata
     published_date = models.DateField()
     likes = models.IntegerField(default=0)
 
@@ -150,7 +151,7 @@ class Video(PublishableModel):
         ordering = ["-published_date"]
 
     def __str__(self):
-        return self.title
+        return self.internal_title
 
 class VideoTranslation(models.Model):
     youtube_video = models.ForeignKey(Video, related_name="translations", on_delete=models.CASCADE)

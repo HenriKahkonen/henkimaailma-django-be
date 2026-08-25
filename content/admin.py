@@ -62,9 +62,9 @@ class VideoTranslationInLine(admin.TabularInline):
 class VideoAdmin(admin.ModelAdmin):
     form = VideoForm
     inlines = [VideoTranslationInLine]
-    list_display = ("title", "youtube_id", "published_date", "published")
+    list_display = ("internal_title", "youtube_id", "published_date", "published")
     list_filter = ("published",)
-    search_fields = ("title", "youtube_id", "category")
+    search_fields = ("internal_title", "youtube_id", "category")
 
 ### ARTICLES ADMIN ###
 
