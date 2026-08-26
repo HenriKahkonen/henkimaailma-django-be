@@ -244,6 +244,7 @@ class ChangelogEntry(PublishableModel):
 class ChangelogEntryTranslation(models.Model):
     changelog_entry = models.ForeignKey(ChangelogEntry, related_name="translations", on_delete=models.CASCADE)
     language = models.CharField(max_length=3, choices=LANGUAGES)
+    translated_title = models.CharField(max_length=255, blank=True)
     body_markdown = models.TextField()
 
     class Meta:

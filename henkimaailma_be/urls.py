@@ -16,13 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from content.views import LegacyVideoImportView, LegacySnSPackImportView
+from content.views import LegacyVideoImportView, LegacySnSPackImportView, GetChangelogView
 from django.conf import settings
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('select2/', include('django_select2.urls')),
+    # Public get
+    path("api/get-changelog/", GetChangelogView.as_view(), name="changelog-list"),
 ]
 
 if settings.DEBUG:

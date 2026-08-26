@@ -2,14 +2,16 @@ from django.shortcuts import render
 from datetime import datetime, date as date_cls
 from django.utils.text import slugify
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.authentication import BasicAuthentication
 from rest_framework import status
 import xml.etree.ElementTree as ET
 from .parsers import RawParser
 
 from .models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation, ChangelogEntry, ChangelogEntryTranslation
+from .serializers import ChangelogEntrySerializer, ChangelogEntryTranslationSerializer
 
 ####################################
 ## Reusable funcs 
@@ -240,4 +242,22 @@ class LegacyChangelogImportView(APIView):
         return Response(
             {"created": created, "updated": updated, "skipped": skipped},
             status=status.HTTP_200_OK,
+        )
+
+
+########################################
+############ API ENDPOINTS #############
+########################################
+
+class GetChangelogView(ListAPIView):
+    """Public API for a GET function for fetching the published changelog in its entirety. Translations are nested inside each changelog entry."""
+
+    serializer_class = ChangelogEntrySerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return (
+            ChangelogEntry.objects.filter(published=True)
+            .prefetch_related("translations")
+            .order_by("-date")
         )
