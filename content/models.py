@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.text import slugify
 
+# Documentation : https://docs.djangoproject.com/en/6.1/topics/db/models/
+
 # /////////////////////////////////
 # ///// Abstract base classes /////
 # /////////////////////////////////
@@ -198,7 +200,7 @@ class VideoTranslation(models.Model):
 class Article(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
     article_image_url = models.URLField(blank=True)
-    article_category = models.CharField(choices=ARTICLE_CATEGORIES)
+    article_category = models.CharField(max_length=255, choices=ARTICLE_CATEGORIES)
     external_url = models.URLField(blank=True) # If the article is a link to somewhere else
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
     published_date = models.DateField()

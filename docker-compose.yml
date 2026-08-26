@@ -1,13 +1,14 @@
 services:
+  # .yml for Spinning up a local copy of a database
   henkimaailma_db:
     image: postgres:16
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER_LOCAL}
+      POSTGRES_PASSWORD: ${DB_PASSWORD_LOCAL}
+      POSTGRES_DB: ${DB_NAME_LOCAL}
     ports:
-      - "5432:5432"
+      - "@{DB_PORT_LOCAL}:@{DB_PORT_LOCAL}"
     volumes:
       - pgdata:/var/lib/postgresql/data
 

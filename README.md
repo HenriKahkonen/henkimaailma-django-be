@@ -11,12 +11,15 @@ python -m venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
-#### 2. Define environment variables
+#### 2. Define environment variables for the database
+At the project root there is a template .env that you can use to define a local postgresql configuration as well as a deployed database connection.
 ```
 #.env at project root
+DB_HOST="localhost"
 DB_NAME="yourname"
 DB_PASS="yourpassword"
 DB_USER="youruser"
+DB_PORT=5432
 ```
 
 #### 3. Create the containerized database:
