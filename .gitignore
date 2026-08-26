@@ -1,2 +1,15 @@
 # Venv stuff
 venv
+
+# Secrets and environment variables
+.env
+
+# Database files
+db.sqlite3
+
+# Useless jank
+*__pycache__
+__init__.py
+
+# Migrations
+*/migrations
