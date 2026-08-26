@@ -1,7 +1,28 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django import forms
 from .models import SoundsAndScapesPack, SoundsAndScapesPackDescription, SnSChangelogEntry, SnSChangelogEntryTranslation, MusicRelease, MusicReleaseTranslation, Video, VideoTranslation, Article, ArticleTranslation, ChangelogEntry, ChangelogEntryTranslation
 from .widgets import TagWidget
+
+### Custom admin actions ###
+
+@admin.action(description="Mark selected entries as published")
+def make_published(modeladmin, request, queryset):
+    updated = queryset.update(published=True)
+    modeladmin.message_user(
+        request,
+        f"{updated} entr{'y' if updated == 1 else 'ies'} marked as published.",
+        messages.SUCCESS,
+    )
+
+
+@admin.action(description="Mark selected entries as unpublished")
+def make_unpublished(modeladmin, request, queryset):
+    updated = queryset.update(published=False)
+    modeladmin.message_user(
+        request,
+        f"{updated} entr{'y' if updated == 1 else 'ies'} marked as unpublished.",
+        messages.SUCCESS,
+    )
 
 ### SNS PACKS ADMIN ###
 
@@ -24,6 +45,7 @@ class SnSPackAdmin(admin.ModelAdmin):
     list_filter = ("published",)
     search_fields = ("title",)
     prepopulated_fields = {"slug": ("title",)}
+    actions = [make_published, make_unpublished]
 
 class SnSChangelogEntryTranslationInline(admin.TabularInline):
     model = SnSChangelogEntryTranslation
@@ -35,6 +57,7 @@ class SnSChangelogEntryAdmin(admin.ModelAdmin):
     list_display = ("date", "title", "published")
     list_filter = ("published",)
     search_fields = ("title", "body_markdown", "tags")
+    actions = [make_published, make_unpublished]
 
 ### MUSIC RELEASES ADMIN ###
 
@@ -56,6 +79,7 @@ class MusicReleaseAdmin(admin.ModelAdmin):
     list_filter = ("published",)
     search_fields = ("title",)
     prepopulated_fields = {"slug": ("title",)}
+    actions = [make_published, make_unpublished]
 
 ### VIDEOS ADMIN ###
 
@@ -76,6 +100,7 @@ class VideoAdmin(admin.ModelAdmin):
     list_display = ("internal_title", "youtube_id", "published_date", "published")
     list_filter = ("published",)
     search_fields = ("internal_title", "youtube_id", "category")
+    actions = [make_published, make_unpublished]
 
 ### ARTICLES ADMIN ###
 
@@ -98,6 +123,7 @@ class ArticleAdmin(admin.ModelAdmin):
     search_fields = ("title", "summary","article_category")
     #TODO: check if search_fields = ("body_markdown") works
     prepopulated_fields = {"slug": ("title",)}
+    actions = [make_published, make_unpublished]
 
 ### CHANGELOG ADMIN ###
 
@@ -111,3 +137,4 @@ class ChangelogEntryAdmin(admin.ModelAdmin):
     list_display = ("date", "title", "published")
     list_filter = ("published",)
     search_fields = ("title", "body_markdown", "tags")
+    actions = [make_published, make_unpublished]
