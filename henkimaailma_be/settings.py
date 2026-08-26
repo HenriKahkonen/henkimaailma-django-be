@@ -20,12 +20,7 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-5wycdux=y_)0#r1sgsw7c@zfhv=t&*=_s0+0yo7o2%^2nk@j*c'
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -44,10 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_select2',
     'rest_framework',
-    'content'
+    'content',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -56,6 +54,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
+else:
+    CORS_ALLOWED_ORIGINS = ["https://henkimaailma.net"]
 
 ROOT_URLCONF = 'henkimaailma_be.urls'
 
@@ -83,7 +86,7 @@ WSGI_APPLICATION = 'henkimaailma_be.wsgi.application'
 DBUSR = os.getenv("DB_USER")
 DBPW = os.getenv("DB_PASSWORD")
 DBHOST = os.getenv("DB_HOST","localhost")
-DBPORT = os.getenv("DB_PORT",5432)
+DBPORT = os.getenv("DB_PORT","5432")
 DBNAME = os.getenv("DB_NAME")
 DATABASE_URL = f"postgres://{DBUSR}:{DBPW}@{DBHOST}:{DBPORT}/{DBNAME}"
 
@@ -91,7 +94,7 @@ DATABASES = {
     'default': dj_database_url.parse(
         DATABASE_URL,
         conn_max_age=600,
-        ssl_require=os.getenv("DB_SSL_REQUIRE", "False") == "True",
+        ssl_require=os.getenv("DB_SSL_REQUIRE", "True") == "True",
     )
 }
 
