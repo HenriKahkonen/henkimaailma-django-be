@@ -88,7 +88,9 @@ DBPW = os.getenv("DB_PASSWORD")
 DBHOST = os.getenv("DB_HOST","localhost")
 DBPORT = os.getenv("DB_PORT","5432")
 DBNAME = os.getenv("DB_NAME")
-DATABASE_URL = f"postgres://{DBUSR}:{DBPW}@{DBHOST}:{DBPORT}/{DBNAME}"
+DATABASE_URL_CONSTRUCTED = f"postgres://{DBUSR}:{DBPW}@{DBHOST}:{DBPORT}/{DBNAME}"
+
+DATABASE_URL = os.getenv("DATABASE_URL",DATABASE_URL_CONSTRUCTED)
 
 DATABASES = {
     'default': dj_database_url.parse(
