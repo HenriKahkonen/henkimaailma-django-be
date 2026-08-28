@@ -1,5 +1,14 @@
 from rest_framework import serializers
-from .models import ChangelogEntry, ChangelogEntryTranslation
+from .models import ChangelogEntry, ChangelogEntryTranslation, Tag, VideoTranslation, Video, ArticleTranslation, Article
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ["name"] # ["name", "slug"] if the frontend ever needs to display a page filtered by tags
+
+###########################
+## Changelog serializers ##
+###########################
 
 class ChangelogEntryTranslationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,3 +20,112 @@ class ChangelogEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = ChangelogEntry
         fields = ["id","date","title","translations"]
+
+################################################
+## Review summary (video/article) serializers ##
+################################################
+
+class VideoTranslationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VideoTranslation
+        fields = ["language", "translated_title", "description"]
+
+class VideoReviewSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source="internal_title")
+    type = serializers.SerializerMethodField()
+    ytid = serializers.CharField(source="youtube_id")
+    tags = TagSerializer(many=True, read_only=True)
+    extras = serializers.JSONField(source="video_extras")
+    translations = VideoTranslationSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Video
+        fields = ["title", "type", "ytid", "published_date", "tags", "slug", "likes", "extras", "translations"]
+
+    def get_type(self, obj):
+        return "V"
+
+class ArticleTranslationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArticleTranslation
+        fields = ["language", "translated_title", "description"]
+
+class ArticleReviewSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+    imgUrl = serializers.URLField(source="article_image_url")
+    tags = TagSerializer(many=True, read_only=True)
+    extras = serializers.JSONField(source="article_extras")
+    translations = ArticleTranslationSerializer(many=True, read_only=True)
+    e_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Article
+        fields = ["title", "type", "imgUrl", "e_url", "published_date", "tags", "slug", "likes", "extras", "translations"]
+
+    def get_type(self, obj):
+        return "E" if obj.external_url else "A"
+
+    def get_e_url(self, obj):
+        return obj.external_url or None
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data.get("e_url"):
+            data.pop("e_url", None)
+        return data
+
+##################################################
+## Review full data (video/article) serializers ##
+##################################################
+
+
+class VideoDetailSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source="internal_title")
+    type = serializers.SerializerMethodField()
+    ytid = serializers.CharField(source="youtube_id")
+    tags = TagSerializer(many=True, read_only=True)
+    extras = serializers.JSONField(source="video_extras")
+    translations = VideoTranslationSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Video
+        fields = [
+            "title", "type", "ytid", "category", "video_language",
+            "published_date", "tags", "slug", "likes", "extras", "translations",
+        ]
+
+    def get_type(self, obj):
+        return "V"
+
+class ArticleTranslationDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArticleTranslation
+        fields = ["language", "translated_title", "description", "body_markdown"]
+
+
+class ArticleDetailSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+    imgUrl = serializers.URLField(source="article_image_url")
+    tags = TagSerializer(many=True, read_only=True)
+    extras = serializers.JSONField(source="article_extras")
+    translations = ArticleTranslationDetailSerializer(many=True, read_only=True)
+    e_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Article
+        fields = [
+            "title", "type", "imgUrl", "e_url", "article_category",
+            "published_date", "tags", "slug", "likes", "extras", "translations",
+        ]
+
+    def get_type(self, obj):
+        return "E" if obj.external_url else "A"
+
+    def get_e_url(self, obj):
+        return obj.external_url or None
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data.get("e_url"):
+            data.pop("e_url", None)
+        return data

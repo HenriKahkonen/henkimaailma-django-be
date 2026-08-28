@@ -69,6 +69,9 @@ ARTICLE_CATEGORIES = [
 
 YOUTUBE_VIDEO_CATEGORIES = [
     ("game_review","Game review"),
+    ("music_review","Music review"),
+    ("film_review","Film review"),
+    ("tv_review","TV review"),
     ("video_essay","Video essay"),
     ("vlog","Vlog"),
     ("commentary","Commentary video"),
@@ -165,6 +168,9 @@ class MusicReleaseTranslation(models.Model):
 
 ### YOUTUBE VIDEOS
 
+def videoextras_defaults():
+    return{"rating" : None}
+
 class Video(PublishableModel):
     youtube_id = models.CharField(max_length=11, unique=True) # NOTE: Possible point of failure in the future if YouTube changes its implementation
     slug = models.SlugField(max_length=255, unique=True, blank=True)
@@ -173,6 +179,7 @@ class Video(PublishableModel):
     tags = models.ManyToManyField(Tag, blank=True, related_name="youtube_videos") #NOTE: if this needs translating, do it in frontend
     video_language = models.CharField(max_length=3, choices=LANGUAGES, blank=True) # NOTE: communicates what language the video itself is in ,not the metadata
     published_date = models.DateField()
+    video_extras = models.JSONField(blank=True,default=videoextras_defaults,help_text="For example rating if the video is a review.")
     likes = models.IntegerField(default=0)
 
     class Meta:
@@ -197,6 +204,9 @@ class VideoTranslation(models.Model):
 
 # ARTICLES EITHER HOSTED ELSEWHERE OR ON THE SITE ITSELF
 
+def articleextras_defaults():
+    return {"rating":None}
+
 class Article(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
     article_image_url = models.URLField(blank=True)
@@ -204,7 +214,7 @@ class Article(PublishableModel, SluggedModel):
     external_url = models.URLField(blank=True) # If the article is a link to somewhere else
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
     published_date = models.DateField()
-    article_extras = models.JSONField(default=dict, blank=True)
+    article_extras = models.JSONField(default=articleextras_defaults, blank=True)
     likes = models.IntegerField(default=0)
 
     class Meta:
@@ -213,12 +223,12 @@ class Article(PublishableModel, SluggedModel):
     def __str__(self):
         return self.title
 
-
 class ArticleTranslation(models.Model):
     article = models.ForeignKey(Article, related_name="translations", on_delete=models.CASCADE)
     language = models.CharField(max_length=3, choices=LANGUAGES)
-    summary = models.TextField()
-    body_markdown = models.TextField()
+    translated_title = models.TextField(blank=True)
+    description = models.TextField(blank=True)
+    body_markdown = models.TextField(blank=True)
 
     class Meta:
         unique_together = ("article", "language")
