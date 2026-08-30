@@ -118,9 +118,9 @@ class ArticleTranslationInline(admin.TabularInline):
 class ArticleAdmin(admin.ModelAdmin):
     form = ArticleForm
     inlines = [ArticleTranslationInline]
-    list_display = ("title", "published_date", "updated_at", "published", "article_category", "external_url")
+    list_display = ("title", "published_date", "updated_at", "published", "category", "external_url")
     list_filter = ("published",)
-    search_fields = ("title", "summary","article_category")
+    search_fields = ("title", "summary","category")
     #TODO: check if search_fields = ("body_markdown") works
     prepopulated_fields = {"slug": ("title",)}
     actions = [make_published, make_unpublished]

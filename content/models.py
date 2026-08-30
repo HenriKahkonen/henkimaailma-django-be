@@ -210,7 +210,7 @@ def articleextras_defaults():
 class Article(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
     article_image_url = models.URLField(blank=True)
-    article_category = models.CharField(max_length=255, choices=ARTICLE_CATEGORIES)
+    category = models.CharField(max_length=255, choices=ARTICLE_CATEGORIES)
     external_url = models.URLField(blank=True) # If the article is a link to somewhere else
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
     published_date = models.DateField()

@@ -286,7 +286,7 @@ class GetReviewsListView(APIView):
             .values("id", "published_date", "review_type")
         )
         article_index = (
-            Article.objects.filter(published=True, article_category__in=REVIEW_CATEGORIES)
+            Article.objects.filter(published=True, category__in=REVIEW_CATEGORIES)
             .annotate(
                 review_type=Case(
                     When(external_url="", then=Value("A")),
