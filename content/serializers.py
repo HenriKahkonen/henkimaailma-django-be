@@ -40,7 +40,7 @@ class VideoReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Video
-        fields = ["title", "type", "category", "ytid", "published_date", "tags", "slug", "likes", "extras", "translations"]
+        fields = ["title", "type", "content_language", "description", "category", "ytid", "published_date", "tags", "slug", "likes", "extras", "translations"]
 
     def get_type(self, obj):
         return "V"
@@ -60,7 +60,7 @@ class ArticleReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Article
-        fields = ["title", "type", "category", "imgUrl", "e_url", "published_date", "tags", "slug", "likes", "extras", "translations"]
+        fields = ["title", "type", "content_language", "description", "category", "imgUrl", "e_url", "published_date", "tags", "slug", "likes", "extras", "translations"]
 
     def get_type(self, obj):
         return "E" if obj.external_url else "A"

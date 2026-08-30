@@ -175,9 +175,10 @@ class Video(PublishableModel):
     youtube_id = models.CharField(max_length=11, unique=True) # NOTE: Possible point of failure in the future if YouTube changes its implementation
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     internal_title = models.CharField(max_length=255)
+    content_language = models.CharField(max_length=3, choices=LANGUAGES, default="fi") # NOTE: communicates what language the video itself is in ,not the metadata
+    description = models.TextField(blank=True)
     category = models.CharField(max_length=100, blank=True, choices=YOUTUBE_VIDEO_CATEGORIES) #NOTE: if this needs translating, do it in frontend
     tags = models.ManyToManyField(Tag, blank=True, related_name="youtube_videos") #NOTE: if this needs translating, do it in frontend
-    video_language = models.CharField(max_length=3, choices=LANGUAGES, blank=True) # NOTE: communicates what language the video itself is in ,not the metadata
     published_date = models.DateField()
     video_extras = models.JSONField(blank=True,default=videoextras_defaults,help_text="For example rating if the video is a review.")
     likes = models.IntegerField(default=0)
@@ -209,6 +210,8 @@ def articleextras_defaults():
 
 class Article(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
+    content_language = models.CharField(max_length=3, choices=LANGUAGES, default="fi")
+    description = models.TextField(blank=True)
     article_image_url = models.URLField(blank=True)
     category = models.CharField(max_length=255, choices=ARTICLE_CATEGORIES)
     external_url = models.URLField(blank=True) # If the article is a link to somewhere else
