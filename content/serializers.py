@@ -100,7 +100,7 @@ class VideoDetailSerializer(serializers.ModelSerializer):
 class ArticleTranslationDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArticleTranslation
-        fields = ["language", "translated_title", "description", "body_markdown"]
+        fields = ["language", "translated_title", "ingress", "description", "body_markdown"]
 
 
 class ArticleDetailSerializer(serializers.ModelSerializer):
@@ -114,7 +114,7 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Article
         fields = [
-            "title", "type", "content_language", "body_markdown", "description", "imgUrl", "e_url", "category", "rating",
+            "title", "type", "content_language", "ingress", "body_markdown", "description", "imgUrl", "e_url", "category", "rating",
             "published_date", "tags", "slug", "likes", "extras", "translations",
         ]
 

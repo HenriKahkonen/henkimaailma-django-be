@@ -227,6 +227,7 @@ class Article(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
     content_language = models.CharField(max_length=3, choices=LANGUAGES, default="fi")
     description = models.TextField(blank=True)
+    ingress = models.TextField(blank=True)
     body_markdown = models.TextField(blank=True)
     article_image_url = models.URLField(blank=True)
     category = models.CharField(max_length=255, choices=ARTICLE_CATEGORIES)
@@ -248,6 +249,7 @@ class ArticleTranslation(models.Model):
     language = models.CharField(max_length=3, choices=LANGUAGES)
     translated_title = models.TextField(blank=True)
     description = models.TextField(blank=True)
+    ingress = models.TextField(blank=True)
     body_markdown = models.TextField(blank=True)
 
     class Meta:
