@@ -67,6 +67,20 @@ ARTICLE_CATEGORIES = [
     ("project_writeup","Project writeup"),
 ]
 
+RATING_OPTIONS = [
+    (0, "No stars"),
+    (1, "0,5"),
+    (2, "1"),
+    (3, "1,5"),
+    (4, "2"),
+    (5, "2,5"),
+    (6, "3"),
+    (7,"3,5"),
+    (8,"4"),
+    (9,"4,5"),
+    (10,"5"),
+]
+
 YOUTUBE_VIDEO_CATEGORIES = [
     ("game_review","Game review"),
     ("music_review","Music review"),
@@ -178,6 +192,7 @@ class Video(PublishableModel):
     content_language = models.CharField(max_length=3, choices=LANGUAGES, default="fi") # NOTE: communicates what language the video itself is in ,not the metadata
     description = models.TextField(blank=True)
     category = models.CharField(max_length=100, blank=True, choices=YOUTUBE_VIDEO_CATEGORIES) #NOTE: if this needs translating, do it in frontend
+    rating = models.IntegerField(choices=RATING_OPTIONS,blank=True, null=True, help_text="Only fill if the video is a review")
     tags = models.ManyToManyField(Tag, blank=True, related_name="youtube_videos") #NOTE: if this needs translating, do it in frontend
     published_date = models.DateField()
     video_extras = models.JSONField(blank=True,default=videoextras_defaults,help_text="For example rating if the video is a review.")
@@ -212,8 +227,10 @@ class Article(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
     content_language = models.CharField(max_length=3, choices=LANGUAGES, default="fi")
     description = models.TextField(blank=True)
+    body_markdown = models.TextField(blank=True)
     article_image_url = models.URLField(blank=True)
     category = models.CharField(max_length=255, choices=ARTICLE_CATEGORIES)
+    rating = models.IntegerField(choices=RATING_OPTIONS, blank=True, null=True, help_text="Only fill if the article is a review")
     external_url = models.URLField(blank=True) # If the article is a link to somewhere else
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
     published_date = models.DateField()
