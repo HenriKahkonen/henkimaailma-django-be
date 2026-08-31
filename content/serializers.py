@@ -28,7 +28,7 @@ class ChangelogEntrySerializer(serializers.ModelSerializer):
 class VideoTranslationSerializer(serializers.ModelSerializer):
     class Meta:
         model = VideoTranslation
-        fields = ["language", "translated_title", "description","translated_subtitles"]
+        fields = ["language", "translated_title", "description","translated_video_subtitles"]
 
 class VideoReviewSerializer(serializers.ModelSerializer):
     title = serializers.CharField(source="internal_title")
@@ -40,7 +40,7 @@ class VideoReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Video
-        fields = ["title", "type", "content_language", "description", "category", "rating", "ytid", "published_date", "tags", "slug", "likes", "extras", "translations","translated_subtitles"]
+        fields = ["title", "type", "content_language", "description", "category", "rating", "ytid", "published_date", "tags", "slug", "likes", "extras", "translations"]
 
     def get_type(self, obj):
         return "V"
