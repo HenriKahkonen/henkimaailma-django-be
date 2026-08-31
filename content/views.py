@@ -10,6 +10,7 @@ from rest_framework.authentication import BasicAuthentication
 from rest_framework import status
 import xml.etree.ElementTree as ET
 from .parsers import RawParser
+import math
 
 from .models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation, ChangelogEntry, ChangelogEntryTranslation, Article, Video
 from .serializers import ChangelogEntrySerializer, VideoReviewSerializer, ArticleReviewSerializer, VideoDetailSerializer, ArticleDetailSerializer
@@ -318,7 +319,7 @@ class GetReviewsListView(APIView):
             if data:
                 reviews.append(data)
 
-        return Response({"total_reviews": total_reviews, "reviews": reviews})
+        return Response({"total_reviews": total_reviews, "review_pages": math.ceil(total_reviews/PAGE_SIZE) ,"reviews": reviews})
 
 class VideoDetailView(APIView):
     authentication_classes = []
