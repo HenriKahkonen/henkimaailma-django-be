@@ -41,7 +41,7 @@ class SnsPackDescInline(admin.TabularInline):
 class SnSPackAdmin(admin.ModelAdmin):
     form = SnSReleaseForm
     inlines = [SnsPackDescInline]
-    list_display = ("title", "release_date", "updated_date", "published", "likes")
+    list_display = ("title", "release_date", "updated_date", "published", "likes", "slug")
     list_filter = ("published",)
     search_fields = ("title",)
     prepopulated_fields = {"slug": ("title",)}
@@ -75,7 +75,7 @@ class MusicReleaseTranslationInline(admin.TabularInline):
 class MusicReleaseAdmin(admin.ModelAdmin):
     form = MusicReleaseForm
     inlines = [MusicReleaseTranslationInline]
-    list_display = ("title", "release_date", "published")
+    list_display = ("title", "release_date", "published", "slug")
     list_filter = ("published",)
     search_fields = ("title",)
     prepopulated_fields = {"slug": ("title",)}
@@ -118,7 +118,7 @@ class ArticleTranslationInline(admin.TabularInline):
 class ArticleAdmin(admin.ModelAdmin):
     form = ArticleForm
     inlines = [ArticleTranslationInline]
-    list_display = ("title", "published_date", "updated_at", "published", "category", "external_url")
+    list_display = ("title", "published_date", "updated_at", "published", "category", "external_url","slug")
     list_filter = ("published",)
     search_fields = ("title", "summary","category")
     #TODO: check if search_fields = ("body_markdown") works
