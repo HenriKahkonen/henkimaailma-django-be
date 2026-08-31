@@ -209,6 +209,7 @@ class VideoTranslation(models.Model):
     language = models.CharField(max_length=3, choices=LANGUAGES)
     translated_title = models.TextField(blank=True)
     description = models.TextField(blank=True)
+    translated_video_subtitles = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ("youtube_video", "language")

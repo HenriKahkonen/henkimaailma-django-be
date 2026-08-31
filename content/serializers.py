@@ -28,7 +28,7 @@ class ChangelogEntrySerializer(serializers.ModelSerializer):
 class VideoTranslationSerializer(serializers.ModelSerializer):
     class Meta:
         model = VideoTranslation
-        fields = ["language", "translated_title", "description"]
+        fields = ["language", "translated_title", "description","translated_subtitles"]
 
 class VideoReviewSerializer(serializers.ModelSerializer):
     title = serializers.CharField(source="internal_title")
@@ -40,10 +40,11 @@ class VideoReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Video
-        fields = ["title", "type", "content_language", "description", "category", "rating", "ytid", "published_date", "tags", "slug", "likes", "extras", "translations"]
+        fields = ["title", "type", "content_language", "description", "category", "rating", "ytid", "published_date", "tags", "slug", "likes", "extras", "translations","translated_subtitles"]
 
     def get_type(self, obj):
         return "V"
+
 
 class ArticleTranslationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -56,17 +57,34 @@ class ArticleReviewSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     extras = serializers.JSONField(source="article_extras")
     translations = ArticleTranslationSerializer(many=True, read_only=True)
+    full_translations = serializers.SerializerMethodField()
     e_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Article
-        fields = ["title", "type", "content_language", "description", "category", "rating", "imgUrl", "e_url", "published_date", "tags", "slug", "likes", "extras", "translations"]
+        fields = ["title", "type", "content_language", "description", "category", "rating", "imgUrl", "e_url", "published_date", "tags", "slug", "likes", "extras", "translations","full_translations"]
 
     def get_type(self, obj):
         return "E" if obj.external_url else "A"
 
     def get_e_url(self, obj):
         return obj.external_url or None
+
+    def get_full_translations(self, obj):
+        """
+        Returns a list of language codes for translations that have non-empty values
+        for translated_title, description, ingress, and body_markdown.
+        """
+        full_langs = []
+        for translation in obj.translations.all():
+            if all([
+                translation.translated_title,
+                translation.description,
+                translation.ingress,
+                translation.body_markdown,
+            ]):
+                full_langs.append(translation.language)
+        return full_langs
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
