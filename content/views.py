@@ -2,17 +2,22 @@ from django.shortcuts import render, get_object_or_404
 from datetime import datetime, date as date_cls
 from django.utils.text import slugify
 from django.db.models import Value, Case, When, CharField
+from django.db import transaction
+from django.http import HttpRequest
+from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.authentication import BasicAuthentication
 from rest_framework import status
+from django.core import serializers
 import xml.etree.ElementTree as ET
 from .parsers import RawParser
+import json
 import math
 
-from .models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation, ChangelogEntry, ChangelogEntryTranslation, Article, Video
+from .models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation, ChangelogEntry, ChangelogEntryTranslation, Article, ArticleTranslation, Video, MusicRelease, MusicReleaseTranslation
 from .serializers import ChangelogEntrySerializer, VideoReviewSerializer, ArticleReviewSerializer, VideoDetailSerializer, ArticleDetailSerializer, SnSSamplePackSerializer, SnSChangelogSerializer
 
 ####################################
@@ -25,6 +30,80 @@ def get_or_create_tag(name):
         return tag
     return Tag.objects.create(name=name, slug=slugify(name))
 
+############################
+## Backup export / import ##
+############################
+
+BACKUP_MODELS = [
+    Tag,
+    SoundsAndScapesPack,
+    SoundsAndScapesPackDescription,
+    SnSChangelogEntry,
+    SnSChangelogEntryTranslation,
+    MusicRelease,
+    MusicReleaseTranslation,
+    Video,
+    VideoTranslation,
+    Article,
+    ArticleTranslation,
+    ChangelogEntry,
+    ChangelogEntryTranslation,
+]
+
+class BackupExportView(APIView):
+    """GET -> dumps every row of every backed-up model as one JSON file."""
+
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        objects = []
+        for model in BACKUP_MODELS:
+            objects.extend(model.objects.all().order_by("pk"))
+
+        data = serializers.serialize("json", objects, indent=2)
+
+        response = HttpResponse(data, content_type="application/json")
+        response["Content-Disposition"] = 'attachment; filename="site_backup.json"'
+        return response
+
+class BackupRestoreView(APIView):
+    """POST -> create-or-overwrite every object in the posted backup JSON."""
+
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        # request.data is already-parsed JSON (dict/list) courtesy of DRF's
+        # JSONParser, but serializers.deserialize wants a raw JSON string —
+        # so we round-trip it back through json.dumps.
+        try:
+            payload = json.dumps(request.data)
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "Body must be valid JSON."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        created, updated = [], []
+        try:
+            with transaction.atomic():
+                for deserialized_object in serializers.deserialize("json", payload):
+                    obj = deserialized_object.object
+                    is_new = obj._meta.pk.attname not in obj.__dict__ or obj.pk is None or not type(obj).objects.filter(pk=obj.pk).exists()
+                    deserialized_object.save()  # also handles any deferred M2M data
+                    (created if is_new else updated).append(f"{type(obj).__name__}:{obj.pk}")
+        except Exception as e:
+            return Response(
+                {"detail": f"Restore failed, nothing was saved: {e}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {"created": created, "updated": updated, "skipped": []},
+            status=status.HTTP_200_OK,
+        )
+    
 ########################################
 ######### LEGACY IMPORT VIEWS ##########
 ########################################
@@ -282,10 +361,10 @@ class GetSnSData(ListAPIView):
     def get(self,request):
         snspacks = (SoundsAndScapesPack.objects.filter(published=True)
             .prefetch_related("translations")
-            .order_by("-release_date"))
+            .order_by("-title"))
 
         # Combine
-        snspacks = SoundsAndScapesPack.objects.filter(published=True).prefetch_related("tags", "translations").order_by("-release_date")
+        snspacks = SoundsAndScapesPack.objects.filter(published=True).prefetch_related("tags", "translations").order_by("-title")
         changelog = SnSChangelogEntry.objects.filter(published=True).prefetch_related("translations").order_by("-date")
 
         return Response({

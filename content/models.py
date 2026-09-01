@@ -183,7 +183,7 @@ class MusicReleaseTranslation(models.Model):
 ### YOUTUBE VIDEOS
 
 def videoextras_defaults():
-    return{"rating" : None}
+    return{}
 
 class Video(PublishableModel):
     youtube_id = models.CharField(max_length=11, unique=True) # NOTE: Possible point of failure in the future if YouTube changes its implementation

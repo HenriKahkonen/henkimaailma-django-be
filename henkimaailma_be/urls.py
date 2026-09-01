@@ -56,3 +56,12 @@ if settings.DEBUG:
         ]
     except ImportError:
         pass
+
+    try:
+        from content.views import BackupExportView, BackupRestoreView
+        urlpatterns += [
+            path('api/backup/export', BackupExportView.as_view(), name="backup-export"),
+            path('api/backup/restore', BackupRestoreView.as_view(), name="backup-restore")
+        ]
+    except ImportError:
+        pass

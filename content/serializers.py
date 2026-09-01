@@ -178,7 +178,7 @@ class SnSSamplePackSerializer(serializers.ModelSerializer):
     class Meta:
         model = SoundsAndScapesPack
         fields = [
-            "title", "slug", "imgUrl", "e_url", "tags",
+            "title", "slug", "licence", "imgUrl", "e_url", "tags",
             "release_date", "updated_date", "likes", "translations", "file_list"
         ]
 
