@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from content.views import LegacyVideoImportView, LegacySnSPackImportView, GetChangelogView, GetReviewsListView, VideoDetailView, ArticleDetailView
+from content.views import LegacyVideoImportView, LegacySnSPackImportView, GetChangelogView, GetReviewsListView, VideoDetailView, ArticleDetailView, GetSnSData
 from django.conf import settings
 
 
@@ -25,6 +25,7 @@ urlpatterns = [
     path('select2/', include('django_select2.urls')),
     # Public get
     path("api/get-changelog/", GetChangelogView.as_view(), name="changelog-list"),
+    path("api/get-sns-data/", GetSnSData.as_view(), name="sns-packs-list"),
     path("api/get-reviews-list/", GetReviewsListView.as_view(), name="reviews-list"),
     path("api/videos/<slug:slug>/", VideoDetailView.as_view()),
     path("api/articles/<slug:slug>/", ArticleDetailView.as_view()),

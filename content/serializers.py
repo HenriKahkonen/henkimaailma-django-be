@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ChangelogEntry, ChangelogEntryTranslation, Tag, VideoTranslation, Video, ArticleTranslation, Article
+from .models import ChangelogEntry, ChangelogEntryTranslation, Tag, VideoTranslation, Video, ArticleTranslation, Article, SoundsAndScapesPack, SoundsAndScapesPackDescription, SnSChangelogEntry, SnSChangelogEntryTranslation
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -147,3 +147,40 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
         if not data.get("e_url"):
             data.pop("e_url", None)
         return data
+
+class SnSChangelogEntryTranslationSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True, read_only=True)
+    class Meta:
+        model = SnSChangelogEntryTranslation
+        fields = ["language","title","body_markdown", "tags"]
+
+class SnSChangelogSerializer(serializers.ModelSerializer):
+    translations = SnSChangelogEntryTranslationSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = SnSChangelogEntry
+        fields = ["date", "title", "translations"]
+
+class SnSSamplePackTranslationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SoundsAndScapesPackDescription
+        fields = ["language", "description"]
+
+class SnSSamplePackSerializer(serializers.ModelSerializer):
+    imgUrl = serializers.URLField(source="cover_image_url")
+    e_url = serializers.SerializerMethodField()
+    tags = TagSerializer(many=True, read_only=True)
+    file_list = serializers.JSONField()
+    translations = SnSSamplePackTranslationSerializer(many=True, read_only=True)
+    release_date = serializers.DateField()
+    updated_date = serializers.DateField()
+
+    class Meta:
+        model = SoundsAndScapesPack
+        fields = [
+            "title", "slug", "imgUrl", "e_url", "tags",
+            "release_date", "updated_date", "likes", "translations", "file_list"
+        ]
+
+    def get_e_url(self, obj):
+        return obj.external_url or None

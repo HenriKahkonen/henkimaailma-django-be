@@ -143,8 +143,8 @@ class SnSChangelogEntry(PublishableModel):
 class SnSChangelogEntryTranslation(models.Model):
     changelog_entry = models.ForeignKey(SnSChangelogEntry, related_name="translations", on_delete=models.CASCADE)
     language = models.CharField(max_length=3, choices=LANGUAGES)
+    title = models.CharField(max_length=255,default="")
     body_markdown = models.TextField()
-    tags = models.CharField(max_length=255, blank=True, help_text="Comma-separated")
 
     class Meta:
         verbose_name_plural = "SnS Changelog Entries"

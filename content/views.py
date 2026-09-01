@@ -13,7 +13,7 @@ from .parsers import RawParser
 import math
 
 from .models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation, ChangelogEntry, ChangelogEntryTranslation, Article, Video
-from .serializers import ChangelogEntrySerializer, VideoReviewSerializer, ArticleReviewSerializer, VideoDetailSerializer, ArticleDetailSerializer
+from .serializers import ChangelogEntrySerializer, VideoReviewSerializer, ArticleReviewSerializer, VideoDetailSerializer, ArticleDetailSerializer, SnSSamplePackSerializer, SnSChangelogSerializer
 
 ####################################
 ## Reusable funcs 
@@ -253,6 +253,10 @@ class LegacyChangelogImportView(APIView):
 
 PAGE_SIZE = 25
 
+###############
+## Changelog ##
+###############
+
 class GetChangelogView(ListAPIView):
     """Public API for a GET function for fetching the published changelog in its entirety. Translations are nested inside each changelog entry."""
 
@@ -265,6 +269,29 @@ class GetChangelogView(ListAPIView):
             .prefetch_related("translations")
             .order_by("-date")
         )
+
+###############################
+### Sounds and Scapes packs ###
+###############################
+
+class GetSnSData(ListAPIView):
+    """Public API for a GET function for fetching the SnS samplepacks' data"""
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def get(self,request):
+        snspacks = (SoundsAndScapesPack.objects.filter(published=True)
+            .prefetch_related("translations")
+            .order_by("-release_date"))
+
+        # Combine
+        snspacks = SoundsAndScapesPack.objects.filter(published=True).prefetch_related("tags", "translations").order_by("-release_date")
+        changelog = SnSChangelogEntry.objects.filter(published=True).prefetch_related("translations").order_by("-date")
+
+        return Response({
+            "packs": SnSSamplePackSerializer(snspacks, many=True).data,
+            "sns_cl": SnSChangelogSerializer(changelog, many=True).data,
+        })
 
 REVIEW_CATEGORIES = ["game_review","film_review","tv_review","music_review"]
 
