@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 from dotenv import load_dotenv 
 
 load_dotenv()
@@ -19,12 +20,7 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-5wycdux=y_)0#r1sgsw7c@zfhv=t&*=_s0+0yo7o2%^2nk@j*c'
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -43,10 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_select2',
     'rest_framework',
-    'content'
+    'content',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -55,6 +54,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
+else:
+    CORS_ALLOWED_ORIGINS = ["https://henkimaailma.net"]
 
 ROOT_URLCONF = 'henkimaailma_be.urls'
 
@@ -79,19 +83,21 @@ WSGI_APPLICATION = 'henkimaailma_be.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
+DBUSR = os.getenv("DB_USER")
+DBPW = os.getenv("DB_PASSWORD")
+DBHOST = os.getenv("DB_HOST","localhost")
+DBPORT = os.getenv("DB_PORT","5432")
+DBNAME = os.getenv("DB_NAME")
+DATABASE_URL_CONSTRUCTED = f"postgres://{DBUSR}:{DBPW}@{DBHOST}:{DBPORT}/{DBNAME}"
+
+DATABASE_URL = os.getenv("DATABASE_URL",DATABASE_URL_CONSTRUCTED)
+
 DATABASES = {
-    'default': {
-        "ENGINE": 'django.db.backends.postgresql',
-        "NAME": os.getenv("DB_NAME"),
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": "localhost",
-        "PORT": 5432,
-    },
-    'sqlite': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=os.getenv("DB_SSL_REQUIRE", "True") == "True",
+    )
 }
 
 

@@ -1,13 +1,19 @@
-from django.shortcuts import render
-from datetime import datetime
+from django.shortcuts import render, get_object_or_404
+from datetime import datetime, date as date_cls
 from django.utils.text import slugify
+from django.db.models import Value, Case, When, CharField
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.authentication import BasicAuthentication
 from rest_framework import status
+import xml.etree.ElementTree as ET
+from .parsers import RawParser
+import math
 
-from .models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation
+from .models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation, ChangelogEntry, ChangelogEntryTranslation, Article, Video
+from .serializers import ChangelogEntrySerializer, VideoReviewSerializer, ArticleReviewSerializer, VideoDetailSerializer, ArticleDetailSerializer, SnSSamplePackSerializer, SnSChangelogSerializer
 
 ####################################
 ## Reusable funcs 
@@ -26,6 +32,8 @@ def get_or_create_tag(name):
 ###### comment these out after the #####
 ##### operation has been completed #####
 ########################################
+
+## Legacy YouTube video import
 
 CATEGORY_MAPPING_YOUTUBE = {
         "peliarviot" : "game_review",
@@ -95,6 +103,7 @@ class LegacyVideoImportView(APIView):
             status=status.HTTP_200_OK,
         )
 
+# Legacy SnS pack import
 
 LICENCE_MAPPING = {
     "CC0" : "cc0"
@@ -186,3 +195,180 @@ class LegacySnSPackImportView(APIView):
             {"created": created, "updated": updated, "skipped": skipped},
             status=status.HTTP_200_OK,
         )
+
+# Legacy Changelog import (XML)
+
+class LegacyChangelogImportView(APIView):
+    '''
+    NOTE: The encoding declaration in the legacy XML needs to be changed from UTF-16 to UTF-8
+    '''
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAdminUser]
+    parser_classes = [RawParser]
+
+    def post(self, request):
+        created, updated, skipped = [], [], []
+
+        try:
+            root = ET.fromstring(request.body)
+        except ET.ParseError as e:
+            return Response({"error": f"Invalid XML: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        for update in root.findall("update"):
+            title = update.get("title", "")
+            date_str = update.get("date", "")
+
+            try:
+                year, month, day = (int(part) for part in date_str.split("-"))
+                entry_date = date_cls(year, month, day)
+            except (ValueError, TypeError):
+                skipped.append(f"{title} (bad date: {date_str!r})")
+                continue
+
+            items = [li.text.strip() for li in update.findall("li") if li.text and li.text.strip()]
+            body_markdown = "\n".join(f"- {item}" for item in items)
+
+            entry, was_created = ChangelogEntry.objects.update_or_create(
+                date=entry_date,
+                defaults={"title": title, "published": True},
+            )
+
+            ChangelogEntryTranslation.objects.update_or_create(
+                changelog_entry=entry,
+                language="fi",
+                defaults={"body_markdown": body_markdown},
+            )
+
+            (created if was_created else updated).append(f"{entry_date} — {title}")
+
+        return Response(
+            {"created": created, "updated": updated, "skipped": skipped},
+            status=status.HTTP_200_OK,
+        )
+
+
+########################################
+############ API ENDPOINTS #############
+########################################
+
+PAGE_SIZE = 25
+
+###############
+## Changelog ##
+###############
+
+class GetChangelogView(ListAPIView):
+    """Public API for a GET function for fetching the published changelog in its entirety. Translations are nested inside each changelog entry."""
+
+    serializer_class = ChangelogEntrySerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return (
+            ChangelogEntry.objects.filter(published=True)
+            .prefetch_related("translations")
+            .order_by("-date")
+        )
+
+###############################
+### Sounds and Scapes packs ###
+###############################
+
+class GetSnSData(ListAPIView):
+    """Public API for a GET function for fetching the SnS samplepacks' data"""
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def get(self,request):
+        snspacks = (SoundsAndScapesPack.objects.filter(published=True)
+            .prefetch_related("translations")
+            .order_by("-release_date"))
+
+        # Combine
+        snspacks = SoundsAndScapesPack.objects.filter(published=True).prefetch_related("tags", "translations").order_by("-release_date")
+        changelog = SnSChangelogEntry.objects.filter(published=True).prefetch_related("translations").order_by("-date")
+
+        return Response({
+            "packs": SnSSamplePackSerializer(snspacks, many=True).data,
+            "sns_cl": SnSChangelogSerializer(changelog, many=True).data,
+        })
+
+REVIEW_CATEGORIES = ["game_review","film_review","tv_review","music_review"]
+
+class GetReviewsListView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        # Pagination
+        try:
+            page = max(int(request.query_params.get("page", 0)), 0)
+        except ValueError:
+            page = 0
+        offset = page * PAGE_SIZE
+
+        # Get indexes and amount of all published video and article reviews
+        video_index = (
+            Video.objects.filter(published=True, category__in=REVIEW_CATEGORIES)
+            .annotate(review_type=Value("V", output_field=CharField()))
+            .values("id", "published_date", "review_type")
+        )
+        article_index = (
+            Article.objects.filter(published=True, category__in=REVIEW_CATEGORIES)
+            .annotate(
+                review_type=Case(
+                    When(external_url="", then=Value("A")),
+                    default=Value("E"),
+                    output_field=CharField(),
+                )
+            )
+            .values("id", "published_date", "review_type")
+        )
+        combined = video_index.union(article_index, all=True).order_by("-published_date")
+        total_reviews = combined.count()
+
+        # Get actual data for only the reviews in the 
+        page_rows = list(combined[offset : offset + PAGE_SIZE])
+
+        video_ids = [r["id"] for r in page_rows if r["review_type"] == "V"]
+        article_ids = [r["id"] for r in page_rows if r["review_type"] != "V"]
+
+        # Serialize results differently based on whether or not the review is video form or not
+        # Add related translations
+        videos = Video.objects.filter(id__in=video_ids).prefetch_related("tags", "translations")
+        articles = Article.objects.filter(id__in=article_ids).prefetch_related("tags", "translations")
+        video_map = {v.id: VideoReviewSerializer(v).data for v in videos}
+        article_map = {a.id: ArticleReviewSerializer(a).data for a in articles}
+
+        reviews = []
+        for row in page_rows:
+            data = video_map.get(row["id"]) if row["review_type"] == "V" else article_map.get(row["id"])
+            if data:
+                reviews.append(data)
+
+        return Response({"total_reviews": total_reviews, "review_pages": math.ceil(total_reviews/PAGE_SIZE) ,"reviews": reviews})
+
+class VideoDetailView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def get(self, request, slug):
+        video = get_object_or_404(
+            Video.objects.prefetch_related("tags", "translations"),
+            slug=slug,
+            published=True,
+        )
+        return Response(VideoDetailSerializer(video).data)
+
+
+class ArticleDetailView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def get(self, request, slug):
+        article = get_object_or_404(
+            Article.objects.prefetch_related("tags", "translations"),
+            slug=slug,
+            published=True,
+        )
+        return Response(ArticleDetailSerializer(article).data)

@@ -16,16 +16,23 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from content.views import LegacyVideoImportView, LegacySnSPackImportView
+from content.views import LegacyVideoImportView, LegacySnSPackImportView, GetChangelogView, GetReviewsListView, VideoDetailView, ArticleDetailView, GetSnSData
 from django.conf import settings
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('select2/', include('django_select2.urls')),
+    # Public get
+    path("api/get-changelog/", GetChangelogView.as_view(), name="changelog-list"),
+    path("api/get-sns-data/", GetSnSData.as_view(), name="sns-packs-list"),
+    path("api/get-reviews-list/", GetReviewsListView.as_view(), name="reviews-list"),
+    path("api/videos/<slug:slug>/", VideoDetailView.as_view()),
+    path("api/articles/<slug:slug>/", ArticleDetailView.as_view()),
 ]
 
 if settings.DEBUG:
+
     try:
         from content.views import LegacyVideoImportView
         urlpatterns += [
@@ -33,10 +40,19 @@ if settings.DEBUG:
         ]
     except ImportError:
         pass
+
     try:
         from content.views import LegacySnSPackImportView
         urlpatterns += [
             path('api/import/legacy-sns-packs/', LegacySnSPackImportView.as_view()),
+        ]
+    except ImportError:
+        pass
+
+    try:
+        from content.views import LegacyChangelogImportView
+        urlpatterns += [
+            path('api/import/legacy-changelog/', LegacyChangelogImportView.as_view())
         ]
     except ImportError:
         pass

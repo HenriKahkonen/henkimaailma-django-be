@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.text import slugify
 
+# Documentation : https://docs.djangoproject.com/en/6.1/topics/db/models/
+
 # /////////////////////////////////
 # ///// Abstract base classes /////
 # /////////////////////////////////
@@ -65,8 +67,25 @@ ARTICLE_CATEGORIES = [
     ("project_writeup","Project writeup"),
 ]
 
+RATING_OPTIONS = [
+    (0, "No stars"),
+    (1, "0,5"),
+    (2, "1"),
+    (3, "1,5"),
+    (4, "2"),
+    (5, "2,5"),
+    (6, "3"),
+    (7,"3,5"),
+    (8,"4"),
+    (9,"4,5"),
+    (10,"5"),
+]
+
 YOUTUBE_VIDEO_CATEGORIES = [
     ("game_review","Game review"),
+    ("music_review","Music review"),
+    ("film_review","Film review"),
+    ("tv_review","TV review"),
     ("video_essay","Video essay"),
     ("vlog","Vlog"),
     ("commentary","Commentary video"),
@@ -124,8 +143,8 @@ class SnSChangelogEntry(PublishableModel):
 class SnSChangelogEntryTranslation(models.Model):
     changelog_entry = models.ForeignKey(SnSChangelogEntry, related_name="translations", on_delete=models.CASCADE)
     language = models.CharField(max_length=3, choices=LANGUAGES)
+    title = models.CharField(max_length=255,default="")
     body_markdown = models.TextField()
-    tags = models.CharField(max_length=255, blank=True, help_text="Comma-separated")
 
     class Meta:
         verbose_name_plural = "SnS Changelog Entries"
@@ -163,14 +182,20 @@ class MusicReleaseTranslation(models.Model):
 
 ### YOUTUBE VIDEOS
 
+def videoextras_defaults():
+    return{"rating" : None}
+
 class Video(PublishableModel):
     youtube_id = models.CharField(max_length=11, unique=True) # NOTE: Possible point of failure in the future if YouTube changes its implementation
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     internal_title = models.CharField(max_length=255)
+    content_language = models.CharField(max_length=3, choices=LANGUAGES, default="fi") # NOTE: communicates what language the video itself is in ,not the metadata
+    description = models.TextField(blank=True)
     category = models.CharField(max_length=100, blank=True, choices=YOUTUBE_VIDEO_CATEGORIES) #NOTE: if this needs translating, do it in frontend
+    rating = models.IntegerField(choices=RATING_OPTIONS,blank=True, null=True, help_text="Only fill if the video is a review")
     tags = models.ManyToManyField(Tag, blank=True, related_name="youtube_videos") #NOTE: if this needs translating, do it in frontend
-    video_language = models.CharField(max_length=3, choices=LANGUAGES, blank=True) # NOTE: communicates what language the video itself is in ,not the metadata
     published_date = models.DateField()
+    video_extras = models.JSONField(blank=True,default=videoextras_defaults,help_text="For example rating if the video is a review.")
     likes = models.IntegerField(default=0)
 
     class Meta:
@@ -184,6 +209,7 @@ class VideoTranslation(models.Model):
     language = models.CharField(max_length=3, choices=LANGUAGES)
     translated_title = models.TextField(blank=True)
     description = models.TextField(blank=True)
+    translated_video_subtitles = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ("youtube_video", "language")
@@ -195,14 +221,22 @@ class VideoTranslation(models.Model):
 
 # ARTICLES EITHER HOSTED ELSEWHERE OR ON THE SITE ITSELF
 
+def articleextras_defaults():
+    return {"rating":None}
+
 class Article(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
+    content_language = models.CharField(max_length=3, choices=LANGUAGES, default="fi")
+    description = models.TextField(blank=True)
+    ingress = models.TextField(blank=True)
+    body_markdown = models.TextField(blank=True)
     article_image_url = models.URLField(blank=True)
-    article_category = models.CharField(choices=ARTICLE_CATEGORIES)
+    category = models.CharField(max_length=255, choices=ARTICLE_CATEGORIES)
+    rating = models.IntegerField(choices=RATING_OPTIONS, blank=True, null=True, help_text="Only fill if the article is a review")
     external_url = models.URLField(blank=True) # If the article is a link to somewhere else
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
     published_date = models.DateField()
-    article_extras = models.JSONField(default=dict, blank=True)
+    article_extras = models.JSONField(default=articleextras_defaults, blank=True)
     likes = models.IntegerField(default=0)
 
     class Meta:
@@ -211,12 +245,13 @@ class Article(PublishableModel, SluggedModel):
     def __str__(self):
         return self.title
 
-
 class ArticleTranslation(models.Model):
     article = models.ForeignKey(Article, related_name="translations", on_delete=models.CASCADE)
     language = models.CharField(max_length=3, choices=LANGUAGES)
-    summary = models.TextField()
-    body_markdown = models.TextField()
+    translated_title = models.TextField(blank=True)
+    description = models.TextField(blank=True)
+    ingress = models.TextField(blank=True)
+    body_markdown = models.TextField(blank=True)
 
     class Meta:
         unique_together = ("article", "language")
@@ -242,8 +277,8 @@ class ChangelogEntry(PublishableModel):
 class ChangelogEntryTranslation(models.Model):
     changelog_entry = models.ForeignKey(ChangelogEntry, related_name="translations", on_delete=models.CASCADE)
     language = models.CharField(max_length=3, choices=LANGUAGES)
+    translated_title = models.CharField(max_length=255, blank=True)
     body_markdown = models.TextField()
-    tags = models.CharField(max_length=255, blank=True, help_text="Comma-separated")
 
     class Meta:
         verbose_name_plural = "changelog entries"
