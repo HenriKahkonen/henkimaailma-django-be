@@ -23,10 +23,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG_MODE", False)
+DEBUG = os.getenv("DEBUG_MODE", False).lower() == "true"
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = [
+    host.strip() 
+    for host in os.getenv("ALLOWED_HOSTS", "").split(",") 
+    if host.strip()
+]
 
 # Application definition
 
@@ -58,7 +61,12 @@ MIDDLEWARE = [
 if DEBUG:
     CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
 else:
-    CORS_ALLOWED_ORIGINS = ["https://henkimaailma.net"]
+
+    CORS_ALLOWED_ORIGINS = [
+    origin.strip() 
+    for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") 
+    if origin.strip()
+]
 
 ROOT_URLCONF = 'henkimaailma_be.urls'
 
@@ -96,7 +104,7 @@ DATABASES = {
     'default': dj_database_url.parse(
         DATABASE_URL,
         conn_max_age=600,
-        ssl_require=os.getenv("DB_SSL_REQUIRE", "True") == "True",
+        ssl_require=os.getenv("DB_SSL_REQUIRE", "True").lower() == "true",
     )
 }
 
