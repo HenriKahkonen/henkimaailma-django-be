@@ -7,4 +7,4 @@ COPY . .
 
 RUN python manage.py collectstatic --noinput
 
-CMD ["gunicorn", "henkimaailma_be.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "henkimaailma_be.wsgi:application", "--bind", "0.0.0.0:8000", "--log-level", "info", "--capture-output"]
