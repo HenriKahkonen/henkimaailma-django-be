@@ -3,14 +3,33 @@ services:
   henkimaailma_db:
     image: postgres:16
     restart: unless-stopped
+    env_file: .env
     environment:
-      POSTGRES_USER: ${DB_USER_LOCAL}
-      POSTGRES_PASSWORD: ${DB_PASSWORD_LOCAL}
-      POSTGRES_DB: ${DB_NAME_LOCAL}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "@{DB_PORT_LOCAL}:@{DB_PORT_LOCAL}"
+      - "${DB_PORT}:${DB_PORT}"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - henkimaailma_db
+    env_file: .env
+    environment:
+      - DB_HOST=henkimaailma_db
+    ports:
+      - "8000:8000"
+    networks:
+      - backend
 
 volumes:
   pgdata:
+
+networks:
+  backend:
