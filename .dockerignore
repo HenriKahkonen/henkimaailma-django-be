@@ -7,3 +7,5 @@ venv/
 .gitignore
 README.md
 staticfiles
+.env.example
+.env.prod.example
