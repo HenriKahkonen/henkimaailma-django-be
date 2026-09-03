@@ -1,5 +1,4 @@
 services:
-  # .yml for Spinning up a local copy of a database
   henkimaailma_db:
     image: postgres:16
     restart: unless-stopped
@@ -25,10 +24,23 @@ services:
       - DB_HOST=henkimaailma_db
     ports:
       - "8000:8000"
-    networks:
-      - backend
     volumes:
       - static_volume:/app/staticfiles
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.local.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_volume:/app/staticfiles
+    networks:
+      - backend
 
 volumes:
   pgdata:
