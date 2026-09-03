@@ -24,11 +24,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('select2/', include('django_select2.urls')),
     # Public get
-    path("api/get-changelog/", GetChangelogView.as_view(), name="changelog-list"),
-    path("api/get-sns-data/", GetSnSData.as_view(), name="sns-packs-list"),
-    path("api/get-reviews-list/", GetReviewsListView.as_view(), name="reviews-list"),
-    path("api/videos/<slug:slug>/", VideoDetailView.as_view()),
-    path("api/articles/<slug:slug>/", ArticleDetailView.as_view()),
+    path("get-changelog/", GetChangelogView.as_view(), name="changelog-list"),
+    path("get-sns-data/", GetSnSData.as_view(), name="sns-packs-list"),
+    path("get-reviews-list/", GetReviewsListView.as_view(), name="reviews-list"),
+    path("videos/<slug:slug>/", VideoDetailView.as_view()),
+    path("articles/<slug:slug>/", ArticleDetailView.as_view()),
 ]
 
 if settings.DEBUG:
@@ -36,7 +36,7 @@ if settings.DEBUG:
     try:
         from content.views import LegacyVideoImportView
         urlpatterns += [
-            path('api/import/legacy-videos/', LegacyVideoImportView.as_view()),
+            path('import/legacy-videos/', LegacyVideoImportView.as_view()),
         ]
     except ImportError:
         pass
@@ -44,7 +44,7 @@ if settings.DEBUG:
     try:
         from content.views import LegacySnSPackImportView
         urlpatterns += [
-            path('api/import/legacy-sns-packs/', LegacySnSPackImportView.as_view()),
+            path('import/legacy-sns-packs/', LegacySnSPackImportView.as_view()),
         ]
     except ImportError:
         pass
@@ -52,7 +52,7 @@ if settings.DEBUG:
     try:
         from content.views import LegacyChangelogImportView
         urlpatterns += [
-            path('api/import/legacy-changelog/', LegacyChangelogImportView.as_view())
+            path('import/legacy-changelog/', LegacyChangelogImportView.as_view())
         ]
     except ImportError:
         pass
@@ -60,8 +60,8 @@ if settings.DEBUG:
     try:
         from content.views import BackupExportView, BackupRestoreView
         urlpatterns += [
-            path('api/backup/export', BackupExportView.as_view(), name="backup-export"),
-            path('api/backup/restore', BackupRestoreView.as_view(), name="backup-restore")
+            path('backup/export', BackupExportView.as_view(), name="backup-export"),
+            path('backup/restore', BackupRestoreView.as_view(), name="backup-restore")
         ]
     except ImportError:
         pass
