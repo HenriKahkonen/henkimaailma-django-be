@@ -10,7 +10,6 @@ db.sqlite3
 
 # Useless jank
 *__pycache__
-__init__.py
 
 #Django static files
 staticfiles
