@@ -185,3 +185,5 @@ LOGGING = {
         },
     },
 }
+
+print("Django deployed and started succesfully")
