@@ -198,7 +198,7 @@ class Video(PublishableModel):
     rating = models.IntegerField(choices=RATING_OPTIONS,blank=True, null=True, help_text="Only fill if the video is a review")
     tags = models.ManyToManyField(Tag, blank=True, related_name="youtube_videos") #NOTE: if this needs translating, do it in frontend
     published_date = models.DateField()
-    video_extras = models.JSONField(blank=True,default=videoextras_defaults,help_text="For example rating if the video is a review.")
+    video_extras = models.JSONField(blank=True,null=True,help_text="For example rating if the video is a review.")
     likes = models.IntegerField(default=0)
 
     class Meta:
@@ -225,7 +225,7 @@ class VideoTranslation(models.Model):
 # ARTICLES EITHER HOSTED ELSEWHERE OR ON THE SITE ITSELF
 
 def articleextras_defaults():
-    return {"rating":None}
+    return {}
 
 class Article(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
@@ -240,7 +240,7 @@ class Article(PublishableModel, SluggedModel):
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
     published_date = models.DateField(default=timezone.now)
     updated_date = models.DateField(blank=True, null=True, default=timezone.now)
-    article_extras = models.JSONField(default=articleextras_defaults, blank=True)
+    article_extras = models.JSONField(blank=True, null=True)
     likes = models.IntegerField(default=0)
 
     class Meta:
