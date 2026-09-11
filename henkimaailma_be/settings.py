@@ -24,6 +24,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG_MODE", "False").lower() == "true"
+BACKUPS_ENABLED = os.getenv("BACKUPS_ENABLED","False").lower() == "true"
 
 ALLOWED_HOSTS = [
     host.strip() 

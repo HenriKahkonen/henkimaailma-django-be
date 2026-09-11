@@ -19,7 +19,6 @@ from django.urls import path, include
 from content.views import LegacyVideoImportView, LegacySnSPackImportView, GetChangelogView, GetReviewsListView, VideoDetailView, ArticleDetailView, GetSnSData
 from django.conf import settings
 
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('select2/', include('django_select2.urls')),
@@ -57,6 +56,7 @@ if settings.DEBUG:
     except ImportError:
         pass
 
+if settings.BACKUPS_ENABLED:
     try:
         from content.views import BackupExportView, BackupRestoreView
         urlpatterns += [
