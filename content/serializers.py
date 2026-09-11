@@ -21,22 +21,22 @@ class ChangelogEntrySerializer(serializers.ModelSerializer):
         model = ChangelogEntry
         fields = ["id","date","title","translations"]
 
-################################################
-## Review summary (video/article) serializers ##
-################################################
+#########################################
+## Summary (video/article) serializers ##
+#########################################
 
-class VideoTranslationSerializer(serializers.ModelSerializer):
+class VideoSummaryTranslationSerializer(serializers.ModelSerializer):
     class Meta:
         model = VideoTranslation
         fields = ["language", "translated_title", "description","translated_video_subtitles"]
 
-class VideoReviewSerializer(serializers.ModelSerializer):
+class VideoSummarySerializer(serializers.ModelSerializer):
     title = serializers.CharField(source="internal_title")
     type = serializers.SerializerMethodField()
     ytid = serializers.CharField(source="youtube_id")
     tags = TagSerializer(many=True, read_only=True)
     extras = serializers.JSONField(source="video_extras")
-    translations = VideoTranslationSerializer(many=True, read_only=True)
+    translations = VideoSummaryTranslationSerializer(many=True, read_only=True)
 
     class Meta:
         model = Video
@@ -46,17 +46,17 @@ class VideoReviewSerializer(serializers.ModelSerializer):
         return "V"
 
 
-class ArticleTranslationSerializer(serializers.ModelSerializer):
+class ArticleSummaryTranslationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArticleTranslation
         fields = ["language", "translated_title", "description"]
 
-class ArticleReviewSerializer(serializers.ModelSerializer):
+class ArticleSummarySerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
     imgUrl = serializers.URLField(source="article_image_url")
     tags = TagSerializer(many=True, read_only=True)
     extras = serializers.JSONField(source="article_extras")
-    translations = ArticleTranslationSerializer(many=True, read_only=True)
+    translations = ArticleSummaryTranslationSerializer(many=True, read_only=True)
     full_translations = serializers.SerializerMethodField()
     e_url = serializers.SerializerMethodField()
 
@@ -92,10 +92,10 @@ class ArticleReviewSerializer(serializers.ModelSerializer):
             data.pop("e_url", None)
         return data
 
+
 ##################################################
 ## Review full data (video/article) serializers ##
 ##################################################
-
 
 class VideoDetailSerializer(serializers.ModelSerializer):
     title = serializers.CharField(source="internal_title")
@@ -103,7 +103,7 @@ class VideoDetailSerializer(serializers.ModelSerializer):
     ytid = serializers.CharField(source="youtube_id")
     tags = TagSerializer(many=True, read_only=True)
     extras = serializers.JSONField(source="video_extras")
-    translations = VideoTranslationSerializer(many=True, read_only=True)
+    translations = VideoSummaryTranslationSerializer(many=True, read_only=True)
 
     class Meta:
         model = Video
@@ -147,6 +147,10 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
         if not data.get("e_url"):
             data.pop("e_url", None)
         return data
+
+###################################
+### SnS sample pack serializers ###
+###################################
 
 class SnSChangelogEntryTranslationSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)

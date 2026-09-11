@@ -61,7 +61,8 @@ SNS_LICENCES = [
 ARTICLE_CATEGORIES = [
     ("blog", "Blog post"), 
     ("game_review","Game review"),
-    ("music_review","Music review"), 
+    ("music_review","Music review"),
+    ("book_review","Book review"), 
     ("film_review","Film review"), 
     ("tv_review","TV review"), 
     ("project_writeup","Project writeup"),
@@ -86,6 +87,7 @@ YOUTUBE_VIDEO_CATEGORIES = [
     ("music_review","Music review"),
     ("film_review","Film review"),
     ("tv_review","TV review"),
+    ("book_review","Book review"),
     ("video_essay","Video essay"),
     ("vlog","Vlog"),
     ("commentary","Commentary video"),

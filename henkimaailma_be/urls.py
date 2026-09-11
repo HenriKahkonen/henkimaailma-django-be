@@ -16,45 +16,37 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from content.views import LegacyVideoImportView, LegacySnSPackImportView, GetChangelogView, GetReviewsListView, VideoDetailView, ArticleDetailView, GetSnSData
+from content.views import GetChangelogView, GetReviewsListView, VideoDetailView, ArticleDetailView, GetSnSData, GetArticlesListView
 from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('select2/', include('django_select2.urls')),
-    # Public get
-    path("get-changelog/", GetChangelogView.as_view(), name="changelog-list"),
-    path("get-sns-data/", GetSnSData.as_view(), name="sns-packs-list"),
-    path("get-reviews-list/", GetReviewsListView.as_view(), name="reviews-list"),
-    path("videos/<slug:slug>/", VideoDetailView.as_view()),
-    path("articles/<slug:slug>/", ArticleDetailView.as_view()),
+
+    # Public get endpoints
+        path("get-changelog/", GetChangelogView.as_view(), name="changelog-list"),
+        path("get-sns-data/", GetSnSData.as_view(), name="sns-packs-list"),
+        path("get-reviews-list/", GetReviewsListView.as_view(), name="reviews-list"),
+        path("get-articles-list/", GetArticlesListView.as_view()),
+
+        # Get endpoint for video and article object, reused for text articles and reviews
+        path("videos/<slug:slug>/", VideoDetailView.as_view()),
+        path("articles/<slug:slug>/", ArticleDetailView.as_view()),
 ]
 
 if settings.DEBUG:
-
     try:
         from content.views import LegacyVideoImportView
-        urlpatterns += [
-            path('import/legacy-videos/', LegacyVideoImportView.as_view()),
-        ]
-    except ImportError:
-        pass
-
-    try:
         from content.views import LegacySnSPackImportView
-        urlpatterns += [
-            path('import/legacy-sns-packs/', LegacySnSPackImportView.as_view()),
-        ]
-    except ImportError:
-        pass
-
-    try:
         from content.views import LegacyChangelogImportView
         urlpatterns += [
+            path('import/legacy-videos/', LegacyVideoImportView.as_view()),
+            path('import/legacy-sns-packs/', LegacySnSPackImportView.as_view()),
             path('import/legacy-changelog/', LegacyChangelogImportView.as_view())
         ]
     except ImportError:
         pass
+
 
 if settings.BACKUPS_ENABLED:
     try:
