@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from django.utils import timezone
 
 # Documentation : https://docs.djangoproject.com/en/6.1/topics/db/models/
 
@@ -61,7 +62,8 @@ SNS_LICENCES = [
 ARTICLE_CATEGORIES = [
     ("blog", "Blog post"), 
     ("game_review","Game review"),
-    ("music_review","Music review"), 
+    ("music_review","Music review"),
+    ("book_review","Book review"), 
     ("film_review","Film review"), 
     ("tv_review","TV review"), 
     ("project_writeup","Project writeup"),
@@ -86,6 +88,7 @@ YOUTUBE_VIDEO_CATEGORIES = [
     ("music_review","Music review"),
     ("film_review","Film review"),
     ("tv_review","TV review"),
+    ("book_review","Book review"),
     ("video_essay","Video essay"),
     ("vlog","Vlog"),
     ("commentary","Commentary video"),
@@ -195,7 +198,7 @@ class Video(PublishableModel):
     rating = models.IntegerField(choices=RATING_OPTIONS,blank=True, null=True, help_text="Only fill if the video is a review")
     tags = models.ManyToManyField(Tag, blank=True, related_name="youtube_videos") #NOTE: if this needs translating, do it in frontend
     published_date = models.DateField()
-    video_extras = models.JSONField(blank=True,default=videoextras_defaults,help_text="For example rating if the video is a review.")
+    video_extras = models.JSONField(blank=True,null=True,help_text="For example rating if the video is a review.")
     likes = models.IntegerField(default=0)
 
     class Meta:
@@ -222,7 +225,7 @@ class VideoTranslation(models.Model):
 # ARTICLES EITHER HOSTED ELSEWHERE OR ON THE SITE ITSELF
 
 def articleextras_defaults():
-    return {"rating":None}
+    return {}
 
 class Article(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
@@ -235,8 +238,9 @@ class Article(PublishableModel, SluggedModel):
     rating = models.IntegerField(choices=RATING_OPTIONS, blank=True, null=True, help_text="Only fill if the article is a review")
     external_url = models.URLField(blank=True) # If the article is a link to somewhere else
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
-    published_date = models.DateField()
-    article_extras = models.JSONField(default=articleextras_defaults, blank=True)
+    published_date = models.DateField(default=timezone.now)
+    updated_date = models.DateField(blank=True, null=True, default=timezone.now)
+    article_extras = models.JSONField(blank=True, null=True)
     likes = models.IntegerField(default=0)
 
     class Meta:
