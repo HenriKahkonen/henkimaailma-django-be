@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from django.utils import timezone
 
 # Documentation : https://docs.djangoproject.com/en/6.1/topics/db/models/
 
@@ -237,7 +238,8 @@ class Article(PublishableModel, SluggedModel):
     rating = models.IntegerField(choices=RATING_OPTIONS, blank=True, null=True, help_text="Only fill if the article is a review")
     external_url = models.URLField(blank=True) # If the article is a link to somewhere else
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
-    published_date = models.DateField()
+    published_date = models.DateField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     article_extras = models.JSONField(default=articleextras_defaults, blank=True)
     likes = models.IntegerField(default=0)
 
