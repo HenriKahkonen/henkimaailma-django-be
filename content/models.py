@@ -239,7 +239,7 @@ class Article(PublishableModel, SluggedModel):
     external_url = models.URLField(blank=True) # If the article is a link to somewhere else
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
     published_date = models.DateField(default=timezone.now)
-    updated_at = models.DateTimeField(default=timezone.now)
+    updated_date = models.DateField(blank=True, default=timezone.now)
     article_extras = models.JSONField(default=articleextras_defaults, blank=True)
     likes = models.IntegerField(default=0)
 
