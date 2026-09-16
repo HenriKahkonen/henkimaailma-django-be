@@ -3,6 +3,12 @@ from django import forms
 from .models import SoundsAndScapesPack, SoundsAndScapesPackDescription, SnSChangelogEntry, SnSChangelogEntryTranslation, MusicRelease, MusicReleaseTranslation, Video, VideoTranslation, Article, Tag, TagTranslation, ArticleTranslation, ChangelogEntry, ChangelogEntryTranslation
 from .widgets import TagWidget
 
+### Admin customizations
+
+admin.site.site_header = "Henkimaailma Django Administration"
+admin.site.site_title = "Henkimaailma Django Administration"
+admin.site.index_title = "Henkimaailma Django Administration"
+
 ### Custom admin actions ###
 
 @admin.action(description="Mark selected entries as published")
