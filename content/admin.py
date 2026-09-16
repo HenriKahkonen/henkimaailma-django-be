@@ -108,9 +108,14 @@ class ArticleForm(forms.ModelForm):
     class Meta:
         model = Article
         fields = "__all__"
-        widgets = {"tags" : TagWidget}
+        widgets = {
+            "tags" : TagWidget,
+            "description" : forms.Textarea(attrs={"rows":3,"cols":60}),
+            "ingress" : forms.Textarea(attrs={"rows":3,"cols":60}),
+            "body_markdown" : forms.Textarea(attrs={"rows":30,"cols":60}),
+            }
 
-class ArticleTranslationInline(admin.TabularInline):
+class ArticleTranslationInline(admin.StackedInline):
     model = ArticleTranslation
     extra = 1
 

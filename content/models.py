@@ -230,16 +230,16 @@ def articleextras_defaults():
 class Article(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
     content_language = models.CharField(max_length=3, choices=LANGUAGES, default="fi")
-    description = models.TextField(blank=True)
-    ingress = models.TextField(blank=True)
-    body_markdown = models.TextField(blank=True)
     article_image_url = models.URLField(blank=True)
+    external_url = models.URLField(blank=True) # If the article is a link to somewhere else
     category = models.CharField(max_length=255, choices=ARTICLE_CATEGORIES)
     rating = models.IntegerField(choices=RATING_OPTIONS, blank=True, null=True, help_text="Only fill if the article is a review")
-    external_url = models.URLField(blank=True) # If the article is a link to somewhere else
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
     published_date = models.DateField(default=timezone.now)
     updated_date = models.DateField(blank=True, null=True, default=timezone.now)
+    description = models.TextField(blank=True)
+    ingress = models.TextField(blank=True)
+    body_markdown = models.TextField(blank=True)
     article_extras = models.JSONField(blank=True, null=True)
     likes = models.IntegerField(default=0)
 
