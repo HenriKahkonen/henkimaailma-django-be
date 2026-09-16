@@ -1,10 +1,17 @@
 from rest_framework import serializers
-from .models import ChangelogEntry, ChangelogEntryTranslation, Tag, VideoTranslation, Video, ArticleTranslation, Article, SoundsAndScapesPack, SoundsAndScapesPackDescription, SnSChangelogEntry, SnSChangelogEntryTranslation
+from .models import ChangelogEntry, ChangelogEntryTranslation, Tag, TagTranslation, VideoTranslation, Video, ArticleTranslation, Article, SoundsAndScapesPack, SoundsAndScapesPackDescription, SnSChangelogEntry, SnSChangelogEntryTranslation
+
+class TagTranslationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TagTranslation
+        fields = ["language", "tname"]
 
 class TagSerializer(serializers.ModelSerializer):
+    translations = TagTranslationSerializer(many=True, read_only=True)
     class Meta:
         model = Tag
-        fields = ["name"] # ["name", "slug"] if the frontend ever needs to display a page filtered by tags
+        fields = ["name","translations"] # ["name", "slug"] if the frontend ever needs to display a page filtered by tags
+
 
 ###########################
 ## Changelog serializers ##

@@ -4,38 +4,6 @@ from django.utils import timezone
 
 # Documentation : https://docs.djangoproject.com/en/6.1/topics/db/models/
 
-# /////////////////////////////////
-# ///// Abstract base classes /////
-# /////////////////////////////////
-
-class PublishableModel(models.Model):
-    """Adds draft/published staging + timestamps to any model."""
-    published = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
-
-class SluggedModel(models.Model):
-    """Adds a slug field, auto-populated from `title` if left blank."""
-    slug = models.SlugField(max_length=255, unique=True, blank=True)
-
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title)
-        super().save(*args, **kwargs)
-
-class Tag(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-    slug = models.SlugField(max_length=50, unique=True)
-
-    def __str__(self):
-        return self.name
-
 # ///////////////////////////////
 # /// Constant specifications ///
 # ///////////////////////////////
@@ -93,6 +61,52 @@ YOUTUBE_VIDEO_CATEGORIES = [
     ("vlog","Vlog"),
     ("commentary","Commentary video"),
 ]
+
+
+# /////////////////////////////////
+# ///// Abstract base classes /////
+# /////////////////////////////////
+
+class PublishableModel(models.Model):
+    """Adds draft/published staging + timestamps to any model."""
+    published = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+class SluggedModel(models.Model):
+    """Adds a slug field, auto-populated from `title` if left blank."""
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True, help_text="Use Finnish as default language.")
+    slug = models.SlugField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class TagTranslation(models.Model):
+    tag = models.ForeignKey(Tag, related_name="translations", on_delete=models.CASCADE)
+    language = models.CharField(max_length=3,choices=LANGUAGES)
+    tname = models.CharField(max_length=50)
+
+    class Meta:
+        unique_together = ("tag","language")
+        verbose_name_plural = "Tag name translations"
+
+    def __str__(self):
+        return self.tname
+
 
 
 # ///////////////////////////////////////

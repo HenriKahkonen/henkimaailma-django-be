@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 from django import forms
-from .models import SoundsAndScapesPack, SoundsAndScapesPackDescription, SnSChangelogEntry, SnSChangelogEntryTranslation, MusicRelease, MusicReleaseTranslation, Video, VideoTranslation, Article, ArticleTranslation, ChangelogEntry, ChangelogEntryTranslation
+from .models import SoundsAndScapesPack, SoundsAndScapesPackDescription, SnSChangelogEntry, SnSChangelogEntryTranslation, MusicRelease, MusicReleaseTranslation, Video, VideoTranslation, Article, Tag, TagTranslation, ArticleTranslation, ChangelogEntry, ChangelogEntryTranslation
 from .widgets import TagWidget
 
 ### Custom admin actions ###
@@ -23,6 +23,26 @@ def make_unpublished(modeladmin, request, queryset):
         f"{updated} entr{'y' if updated == 1 else 'ies'} marked as unpublished.",
         messages.SUCCESS,
     )
+
+### Tags admin ###
+
+class TagForm(forms.ModelForm):
+    class Meta:
+        model = Tag
+        fields = "__all__"
+
+class TagTranslationInline(admin.TabularInline):
+    model = TagTranslation
+    extra = 1
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    form = TagForm
+    inlines = [TagTranslationInline]
+    list_display = ("name",)
+    search_fields = ("name","translations__tname")
+    prepopulated_fields = {"slug": ("name",)}
+    actions = [make_published, make_unpublished]
 
 ### SNS PACKS ADMIN ###
 
