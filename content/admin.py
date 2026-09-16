@@ -43,7 +43,7 @@ class SnSPackAdmin(admin.ModelAdmin):
     inlines = [SnsPackDescInline]
     list_display = ("title", "release_date", "updated_date", "published", "likes", "slug")
     list_filter = ("published",)
-    search_fields = ("title",)
+    search_fields = ("title","file_list")
     prepopulated_fields = {"slug": ("title",)}
     actions = [make_published, make_unpublished]
 
@@ -56,7 +56,7 @@ class SnSChangelogEntryAdmin(admin.ModelAdmin):
     inlines = [SnSChangelogEntryTranslationInline]
     list_display = ("date", "title", "published")
     list_filter = ("published",)
-    search_fields = ("title", "body_markdown", "tags")
+    search_fields = ("title", "translations__title", "translations__body_markdown")
     actions = [make_published, make_unpublished]
 
 ### MUSIC RELEASES ADMIN ###
@@ -125,8 +125,7 @@ class ArticleAdmin(admin.ModelAdmin):
     inlines = [ArticleTranslationInline]
     list_display = ("title", "published_date", "updated_at", "published", "category", "external_url","slug")
     list_filter = ("published",)
-    search_fields = ("title", "summary","category")
-    #TODO: check if search_fields = ("body_markdown") works
+    search_fields = ("title","category","body_markdown","description","tags__name")
     prepopulated_fields = {"slug": ("title",)}
     actions = [make_published, make_unpublished]
 
@@ -141,5 +140,5 @@ class ChangelogEntryAdmin(admin.ModelAdmin):
     inlines = [ChangelogEntryTranslationInline]
     list_display = ("date", "title", "published")
     list_filter = ("published",)
-    search_fields = ("title", "body_markdown", "tags")
+    search_fields = ("translations__translated_title", "translations__body_markdown")
     actions = [make_published, make_unpublished]
