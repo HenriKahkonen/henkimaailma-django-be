@@ -130,6 +130,16 @@ class VideoAdmin(admin.ModelAdmin):
 
 ### ARTICLES ADMIN ###
 
+class ArticleTranslationForm(forms.ModelForm):
+    class Meta:
+        model = ArticleTranslation
+        fields = "__all__"
+        widgets = {
+            "description" : forms.Textarea(attrs={"rows":3,"cols":60}),
+            "ingress" : forms.Textarea(attrs={"rows":3,"cols":60}),
+            "body_markdown" : forms.Textarea(attrs={"rows":30,"cols":60}),
+        }
+
 class ArticleForm(forms.ModelForm):
     class Meta:
         model = Article
@@ -143,6 +153,7 @@ class ArticleForm(forms.ModelForm):
 
 class ArticleTranslationInline(admin.StackedInline):
     model = ArticleTranslation
+    form = ArticleTranslationForm
     extra = 0
 
 @admin.register(Article)

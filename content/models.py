@@ -267,7 +267,7 @@ class Article(PublishableModel, SluggedModel):
 class ArticleTranslation(models.Model):
     article = models.ForeignKey(Article, related_name="translations", on_delete=models.CASCADE)
     language = models.CharField(max_length=3, choices=LANGUAGES)
-    translated_title = models.TextField(blank=True)
+    translated_title = models.CharField(blank=True)
     description = models.TextField(blank=True)
     ingress = models.TextField(blank=True)
     body_markdown = models.TextField(blank=True)
