@@ -39,7 +39,7 @@ class TagForm(forms.ModelForm):
 
 class TagTranslationInline(admin.TabularInline):
     model = TagTranslation
-    extra = 1
+    extra = 0
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
@@ -61,7 +61,7 @@ class SnSReleaseForm(forms.ModelForm):
 class SnsPackDescInline(admin.TabularInline):
     '''Language-specific description of a SnS sample pack.'''
     model = SoundsAndScapesPackDescription
-    extra = 1
+    extra = 0
 
 @admin.register(SoundsAndScapesPack)
 class SnSPackAdmin(admin.ModelAdmin):
@@ -75,7 +75,7 @@ class SnSPackAdmin(admin.ModelAdmin):
 
 class SnSChangelogEntryTranslationInline(admin.TabularInline):
     model = SnSChangelogEntryTranslation
-    extra = 1
+    extra = 0
 
 @admin.register(SnSChangelogEntry)
 class SnSChangelogEntryAdmin(admin.ModelAdmin):
@@ -95,7 +95,7 @@ class MusicReleaseForm(forms.ModelForm):
 
 class MusicReleaseTranslationInline(admin.TabularInline):
     model = MusicReleaseTranslation
-    extra = 1
+    extra = 0
 
 @admin.register(MusicRelease)
 class MusicReleaseAdmin(admin.ModelAdmin):
@@ -130,6 +130,16 @@ class VideoAdmin(admin.ModelAdmin):
 
 ### ARTICLES ADMIN ###
 
+class ArticleTranslationForm(forms.ModelForm):
+    class Meta:
+        model = ArticleTranslation
+        fields = "__all__"
+        widgets = {
+            "description" : forms.Textarea(attrs={"rows":3,"cols":60}),
+            "ingress" : forms.Textarea(attrs={"rows":3,"cols":60}),
+            "body_markdown" : forms.Textarea(attrs={"rows":30,"cols":60}),
+        }
+
 class ArticleForm(forms.ModelForm):
     class Meta:
         model = Article
@@ -143,7 +153,8 @@ class ArticleForm(forms.ModelForm):
 
 class ArticleTranslationInline(admin.StackedInline):
     model = ArticleTranslation
-    extra = 1
+    form = ArticleTranslationForm
+    extra = 0
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
@@ -159,7 +170,7 @@ class ArticleAdmin(admin.ModelAdmin):
 
 class ChangelogEntryTranslationInline(admin.TabularInline):
     model = ChangelogEntryTranslation
-    extra = 1
+    extra = 0
 
 @admin.register(ChangelogEntry)
 class ChangelogEntryAdmin(admin.ModelAdmin):
