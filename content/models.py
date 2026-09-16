@@ -159,9 +159,10 @@ class SnSChangelogEntryTranslation(models.Model):
 class MusicRelease(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
     cover_image_url = models.URLField(blank=True)
+    release_date = models.DateField()
     tags = models.ManyToManyField(Tag, blank=True, related_name="music_release")
     streaming_links = models.JSONField(default=dict, blank=True)
-    release_date = models.DateField()
+    extras = models.JSONField(default=dict, blank=True)
     likes = models.IntegerField(default=0)
 
     class Meta:
@@ -236,7 +237,7 @@ class Article(PublishableModel, SluggedModel):
     rating = models.IntegerField(choices=RATING_OPTIONS, blank=True, null=True, help_text="Only fill if the article is a review")
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
     published_date = models.DateField(default=timezone.now)
-    updated_date = models.DateField(blank=True, null=True, default=timezone.now)
+    updated_date = models.DateField(blank=True, null=True)
     description = models.TextField(blank=True)
     ingress = models.TextField(blank=True)
     body_markdown = models.TextField(blank=True)
