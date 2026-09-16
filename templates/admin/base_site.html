@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {% if is_local_env %}
+    <style>
+        :root, html[data-theme="light"], html[data-theme="dark"] {
+            --header-bg: #7f0d33;
+            --header-color: #ffffff;
+            --breadcrumbs-bg: #530a22;
+            --breadcrumbs-fg: #f3c9d6;
+            --breadcrumbs-link-fg: #ffffff;
+            --link-fg: #c23663;
+            --link-hover-color: #7f0d33;
+        }
+    </style>
+    {% endif %}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }}{% if is_local_env %} env-local{% endif %}{% endblock %}

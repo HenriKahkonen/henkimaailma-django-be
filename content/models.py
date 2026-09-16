@@ -4,38 +4,6 @@ from django.utils import timezone
 
 # Documentation : https://docs.djangoproject.com/en/6.1/topics/db/models/
 
-# /////////////////////////////////
-# ///// Abstract base classes /////
-# /////////////////////////////////
-
-class PublishableModel(models.Model):
-    """Adds draft/published staging + timestamps to any model."""
-    published = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
-
-class SluggedModel(models.Model):
-    """Adds a slug field, auto-populated from `title` if left blank."""
-    slug = models.SlugField(max_length=255, unique=True, blank=True)
-
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title)
-        super().save(*args, **kwargs)
-
-class Tag(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-    slug = models.SlugField(max_length=50, unique=True)
-
-    def __str__(self):
-        return self.name
-
 # ///////////////////////////////
 # /// Constant specifications ///
 # ///////////////////////////////
@@ -93,6 +61,52 @@ YOUTUBE_VIDEO_CATEGORIES = [
     ("vlog","Vlog"),
     ("commentary","Commentary video"),
 ]
+
+
+# /////////////////////////////////
+# ///// Abstract base classes /////
+# /////////////////////////////////
+
+class PublishableModel(models.Model):
+    """Adds draft/published staging + timestamps to any model."""
+    published = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+class SluggedModel(models.Model):
+    """Adds a slug field, auto-populated from `title` if left blank."""
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True, help_text="Use Finnish as default language.")
+    slug = models.SlugField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class TagTranslation(models.Model):
+    tag = models.ForeignKey(Tag, related_name="translations", on_delete=models.CASCADE)
+    language = models.CharField(max_length=3,choices=LANGUAGES)
+    tname = models.CharField(max_length=50)
+
+    class Meta:
+        unique_together = ("tag","language")
+        verbose_name_plural = "Tag name translations"
+
+    def __str__(self):
+        return self.tname
+
 
 
 # ///////////////////////////////////////
@@ -159,9 +173,10 @@ class SnSChangelogEntryTranslation(models.Model):
 class MusicRelease(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
     cover_image_url = models.URLField(blank=True)
+    release_date = models.DateField()
     tags = models.ManyToManyField(Tag, blank=True, related_name="music_release")
     streaming_links = models.JSONField(default=dict, blank=True)
-    release_date = models.DateField()
+    extras = models.JSONField(default=dict, blank=True)
     likes = models.IntegerField(default=0)
 
     class Meta:
@@ -230,16 +245,16 @@ def articleextras_defaults():
 class Article(PublishableModel, SluggedModel):
     title = models.CharField(max_length=255)
     content_language = models.CharField(max_length=3, choices=LANGUAGES, default="fi")
+    article_image_url = models.URLField(blank=True)
+    external_url = models.URLField(blank=True) # If the article is a link to somewhere else
+    category = models.CharField(max_length=255, choices=ARTICLE_CATEGORIES)
+    rating = models.IntegerField(choices=RATING_OPTIONS, blank=True, null=True, help_text="Only fill if the article is a review")
+    tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
+    published_date = models.DateField(default=timezone.now)
+    updated_date = models.DateField(blank=True, null=True)
     description = models.TextField(blank=True)
     ingress = models.TextField(blank=True)
     body_markdown = models.TextField(blank=True)
-    article_image_url = models.URLField(blank=True)
-    category = models.CharField(max_length=255, choices=ARTICLE_CATEGORIES)
-    rating = models.IntegerField(choices=RATING_OPTIONS, blank=True, null=True, help_text="Only fill if the article is a review")
-    external_url = models.URLField(blank=True) # If the article is a link to somewhere else
-    tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
-    published_date = models.DateField(default=timezone.now)
-    updated_date = models.DateField(blank=True, null=True, default=timezone.now)
     article_extras = models.JSONField(blank=True, null=True)
     likes = models.IntegerField(default=0)
 

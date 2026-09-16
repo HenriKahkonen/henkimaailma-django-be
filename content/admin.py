@@ -1,7 +1,13 @@
 from django.contrib import admin, messages
 from django import forms
-from .models import SoundsAndScapesPack, SoundsAndScapesPackDescription, SnSChangelogEntry, SnSChangelogEntryTranslation, MusicRelease, MusicReleaseTranslation, Video, VideoTranslation, Article, ArticleTranslation, ChangelogEntry, ChangelogEntryTranslation
+from .models import SoundsAndScapesPack, SoundsAndScapesPackDescription, SnSChangelogEntry, SnSChangelogEntryTranslation, MusicRelease, MusicReleaseTranslation, Video, VideoTranslation, Article, Tag, TagTranslation, ArticleTranslation, ChangelogEntry, ChangelogEntryTranslation
 from .widgets import TagWidget
+
+### Admin customizations
+
+admin.site.site_header = "Henkimaailma Django Administration"
+admin.site.site_title = "Henkimaailma Django Administration"
+admin.site.index_title = "Henkimaailma Django Administration"
 
 ### Custom admin actions ###
 
@@ -24,6 +30,26 @@ def make_unpublished(modeladmin, request, queryset):
         messages.SUCCESS,
     )
 
+### Tags admin ###
+
+class TagForm(forms.ModelForm):
+    class Meta:
+        model = Tag
+        fields = "__all__"
+
+class TagTranslationInline(admin.TabularInline):
+    model = TagTranslation
+    extra = 1
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    form = TagForm
+    inlines = [TagTranslationInline]
+    list_display = ("name",)
+    search_fields = ("name","translations__tname")
+    prepopulated_fields = {"slug": ("name",)}
+    actions = [make_published, make_unpublished]
+
 ### SNS PACKS ADMIN ###
 
 class SnSReleaseForm(forms.ModelForm):
@@ -43,7 +69,7 @@ class SnSPackAdmin(admin.ModelAdmin):
     inlines = [SnsPackDescInline]
     list_display = ("title", "release_date", "updated_date", "published", "likes", "slug")
     list_filter = ("published",)
-    search_fields = ("title",)
+    search_fields = ("title","file_list")
     prepopulated_fields = {"slug": ("title",)}
     actions = [make_published, make_unpublished]
 
@@ -56,7 +82,7 @@ class SnSChangelogEntryAdmin(admin.ModelAdmin):
     inlines = [SnSChangelogEntryTranslationInline]
     list_display = ("date", "title", "published")
     list_filter = ("published",)
-    search_fields = ("title", "body_markdown", "tags")
+    search_fields = ("title", "translations__title", "translations__body_markdown")
     actions = [make_published, make_unpublished]
 
 ### MUSIC RELEASES ADMIN ###
@@ -108,9 +134,14 @@ class ArticleForm(forms.ModelForm):
     class Meta:
         model = Article
         fields = "__all__"
-        widgets = {"tags" : TagWidget}
+        widgets = {
+            "tags" : TagWidget,
+            "description" : forms.Textarea(attrs={"rows":3,"cols":60}),
+            "ingress" : forms.Textarea(attrs={"rows":3,"cols":60}),
+            "body_markdown" : forms.Textarea(attrs={"rows":30,"cols":60}),
+            }
 
-class ArticleTranslationInline(admin.TabularInline):
+class ArticleTranslationInline(admin.StackedInline):
     model = ArticleTranslation
     extra = 1
 
@@ -120,8 +151,7 @@ class ArticleAdmin(admin.ModelAdmin):
     inlines = [ArticleTranslationInline]
     list_display = ("title", "published_date", "updated_at", "published", "category", "external_url","slug")
     list_filter = ("published",)
-    search_fields = ("title", "summary","category")
-    #TODO: check if search_fields = ("body_markdown") works
+    search_fields = ("title","category","body_markdown","description","tags__name")
     prepopulated_fields = {"slug": ("title",)}
     actions = [make_published, make_unpublished]
 
@@ -136,5 +166,5 @@ class ChangelogEntryAdmin(admin.ModelAdmin):
     inlines = [ChangelogEntryTranslationInline]
     list_display = ("date", "title", "published")
     list_filter = ("published",)
-    search_fields = ("title", "body_markdown", "tags")
+    search_fields = ("translations__translated_title", "translations__body_markdown")
     actions = [make_published, make_unpublished]
