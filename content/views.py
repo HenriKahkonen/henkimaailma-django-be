@@ -1,9 +1,7 @@
 from django.shortcuts import render, get_object_or_404
-from datetime import datetime, date as date_cls
 from django.utils.text import slugify
 from django.db.models import Value, Case, When, CharField
 from django.db import transaction
-from django.http import HttpRequest
 from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
@@ -12,12 +10,13 @@ from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.authentication import BasicAuthentication
 from rest_framework import status
 from django.core import serializers
-import xml.etree.ElementTree as ET
-from .parsers import RawParser
+'''import xml.etree.ElementTree as ET
+from .parsers import RawParser'''
 import json
 import math
 
-from .models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation, ChangelogEntry, ChangelogEntryTranslation, Article, ArticleTranslation, Video, MusicRelease, MusicReleaseTranslation
+from content.models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation, ChangelogEntry, ChangelogEntryTranslation, Article, ArticleTranslation, Video, MusicRelease, MusicReleaseTranslation
+from analytics.models import ViewEvent, ViewCount
 from .serializers import ChangelogEntrySerializer, VideoSummarySerializer, ArticleSummarySerializer, VideoDetailSerializer, ArticleDetailSerializer, SnSSamplePackSerializer, SnSChangelogSerializer
 
 ############################
@@ -48,6 +47,7 @@ def get_or_create_tag(name):
 ########################################
 ########################################
 
+
 ############################
 ## Backup export / import ##
 ############################
@@ -66,6 +66,8 @@ BACKUP_MODELS = [
     ArticleTranslation,
     ChangelogEntry,
     ChangelogEntryTranslation,
+    ViewCount,
+    ViewEvent,
 ]
 
 class BackupExportView(APIView):

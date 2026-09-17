@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.text import slugify
 from django.utils import timezone
 
+
 # Documentation : https://docs.djangoproject.com/en/6.1/topics/db/models/
 
 # ///////////////////////////////
@@ -88,6 +89,10 @@ class SluggedModel(models.Model):
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
 
+#########################
+## Tags, shared by all ##
+#########################
+
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True, help_text="Use Finnish as default language.")
     slug = models.SlugField(max_length=50, unique=True)
@@ -107,12 +112,21 @@ class TagTranslation(models.Model):
     def __str__(self):
         return self.tname
 
-
-
 # ///////////////////////////////////////
 # ///// Actually usable data models /////
 # ///////////////////////////////////////
 
+
+
+class GenericPage(SluggedModel):
+    '''
+    Page object to count generic page visits (index, reviews list, contact info page...). 
+    '''
+    title = models.CharField(max_length=80)
+    published = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.title}"
 
 ### SNS SAMPLE PACKS
 

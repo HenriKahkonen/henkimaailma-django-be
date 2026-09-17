@@ -52,8 +52,15 @@ INSTALLED_APPS = [
     'django_select2',
     'rest_framework',
     'content',
-    'corsheaders'
+    'corsheaders',
+    'analytics',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_RATES': {
+        'view_track': '30/min',
+    }
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
