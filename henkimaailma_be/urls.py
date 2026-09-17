@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from content.views import GetChangelogView, GetReviewsListView, VideoDetailView, ArticleDetailView, GetSnSData, GetArticlesListView
+from analytics.views import TrackViewAPIView
 from django.conf import settings
 
 urlpatterns = [
@@ -29,9 +30,12 @@ urlpatterns = [
         path("get-reviews-list/", GetReviewsListView.as_view(), name="reviews-list"),
         path("get-articles-list/", GetArticlesListView.as_view()),
 
-        # Get endpoint for video and article object, reused for text articles and reviews
+    # Get endpoint for video and article object, reused for text articles and reviews
         path("videos/<slug:slug>/", VideoDetailView.as_view()),
         path("articles/<slug:slug>/", ArticleDetailView.as_view()),
+
+    # Analytics and page view tracking endpoints
+        path("analytics/", TrackViewAPIView.as_view())
 ]
 
 if settings.DEBUG:
