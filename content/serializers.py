@@ -1,6 +1,10 @@
 from rest_framework import serializers
 from .models import ChangelogEntry, ChangelogEntryTranslation, Tag, TagTranslation, VideoTranslation, Video, ArticleTranslation, Article, SoundsAndScapesPack, SoundsAndScapesPackDescription, SnSChangelogEntry, SnSChangelogEntryTranslation
 
+#####################
+## Tag serializers ##
+#####################
+
 class TagTranslationSerializer(serializers.ModelSerializer):
     class Meta:
         model = TagTranslation

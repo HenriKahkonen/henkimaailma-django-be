@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 from django import forms
-from .models import SoundsAndScapesPack, SoundsAndScapesPackDescription, SnSChangelogEntry, SnSChangelogEntryTranslation, MusicRelease, MusicReleaseTranslation, Video, VideoTranslation, Article, Tag, TagTranslation, ArticleTranslation, ChangelogEntry, ChangelogEntryTranslation
+from content.models import SoundsAndScapesPack, SoundsAndScapesPackDescription, SnSChangelogEntry, SnSChangelogEntryTranslation, MusicRelease, MusicReleaseTranslation, Video, VideoTranslation, Article, Tag, TagTranslation, ArticleTranslation, ChangelogEntry, ChangelogEntryTranslation, GenericPage
 from .widgets import TagWidget
 
 ### Admin customizations
@@ -179,3 +179,11 @@ class ChangelogEntryAdmin(admin.ModelAdmin):
     list_filter = ("published",)
     search_fields = ("translations__translated_title", "translations__body_markdown")
     actions = [make_published, make_unpublished]
+
+### Page view count admin ###
+
+@admin.register(GenericPage)
+class GenericPageAdmin(admin.ModelAdmin):
+    list_display = ("title","slug")
+    actions = [make_published, make_unpublished]
+
