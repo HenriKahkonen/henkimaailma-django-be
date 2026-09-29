@@ -15,7 +15,7 @@ from .parsers import RawParser'''
 import json
 import math
 
-from content.models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation, ChangelogEntry, ChangelogEntryTranslation, Article, ArticleTranslation, Video, MusicRelease, MusicReleaseTranslation
+from content.models import Video, VideoTranslation, SoundsAndScapesPack, SoundsAndScapesPackDescription, Tag, SnSChangelogEntry, SnSChangelogEntryTranslation, ChangelogEntry, ChangelogEntryTranslation, Article, ArticleTranslation, Video, MusicRelease, MusicReleaseTranslation, GenericPage
 from analytics.models import ViewEvent, ViewCount
 from .serializers import ChangelogEntrySerializer, VideoSummarySerializer, ArticleSummarySerializer, VideoDetailSerializer, ArticleDetailSerializer, SnSSamplePackSerializer, SnSChangelogSerializer
 
@@ -68,6 +68,7 @@ BACKUP_MODELS = [
     ChangelogEntryTranslation,
     ViewCount,
     ViewEvent,
+    GenericPage
 ]
 
 class BackupExportView(APIView):
