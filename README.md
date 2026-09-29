@@ -57,3 +57,10 @@ The backend supports exporting and importing backups of data, when manual backup
 3. Set the .env variable back to BACKUPS_ENABLED=False on your deployed instance
 4. POST with the response as your post body, to http://localhost:8080/backup/restore 
 
+**At this point the database is not synced with what Django expects so new items cannot be added to the database due to the new items throwing IntegrityError**. This is because after the data import Django tries to add a public key = 1 to the first new item in the database, all the while it already existing without Django's public key pointer being updated to match the actual state of the database.
+
+To fix, replace the placeholder strings with your actual database DB_NAME and DB_USER settings declared in the .env and run:
+
+```
+docker compose exec web python manage.py sqlsequencereset content | docker compose exec -T henkimaailma_db psql -U <YOUR_DB_USER> -d <YOUR_DB_NAME>
+```
