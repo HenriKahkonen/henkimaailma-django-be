@@ -1,18 +1,24 @@
 # henkimaailma-django-be
-A Python Django backend for my personal homepage Henkimaailma
+A Python Django backend for my personal homepage Henkimaailma.
+For the frontend code, see [here](https://github.com/HenriKahkonen/henkimaailma-ts)
 
 ## Installation for local development:
 
-#### 1. Activate venv and install dependencies:
+#### 1. Make sure Docker is installed on the system.
+
+#### 2. Create and activate venv and install dependencies:
 ```
 #Linux/MacOS
 
-python -m venv
-source venv/bin/activate
+python -m venv venv
+source venv/bin/activate # or: source venv/bin/activate.fish if using fish terminal
 pip install -r requirements.txt
 ```
-#### 2. Define environment variables for the database
-At the project root there is a template .env that you can use to define a local postgresql configuration as well as a deployed database connection.
+#### 3. Define environment variables for the database
+At the project root there is a template .env that you can use to define a local postgresql configuration as well as a deployed database connection. 
+
+**Remember to remove the line DATABASE_URL if you are developing locally and not connecting to an external database.**
+
 ```
 #.env at project root
 DB_HOST="localhost"
@@ -22,26 +28,32 @@ DB_USER="youruser"
 DB_PORT=5432
 ```
 
-#### 3. Create the containerized database:
+#### 4. Create the containers that run the app:
 ```
-docker compose -f 'docker-compose.yml' up -d --build 'henkimaalma_db' 
-```
-
-#### 4. Initialize database with the data models:
-```
-python manage.py makemigrations
-python manage.py migrate
+docker compose up -d
 ```
 
-#### 5. Create superuser for Django:
+#### 5. Initialize database with the data models:
 ```
-python manage.py createsuperuser
+docker compose exec web python manage.py migrate
+```
+
+#### 6. Create superuser for Django:
+```
+docker compose exec web python manage.py createsuperuser
 # Follow prompts to create root user
 ```
 
-#### 6. Run 
-```
-python manage.py runserver
-# In your web browser navigate to http://127.0.0.1:8000/admin
-```
+#### 7. Connect to Django admin panel to verify server is online
+
+In your web browser navigate to http://127.0.0.1:8080/admin
+
+#### 8. (Optional): migrate data
+
+The backend supports exporting and importing backups of data, when manual backups are set to be allowed by setting the .env variable BACKUPS_ENABLED to True. If you wish to import data from a deployed Database, 
+
+1. SSH into the deployed instance, set the .env variable to True and then 
+2. GET, passing the correct credentials in the post to ${your_db_location}/backup/export and copy the response
+3. Set the .env variable back to BACKUPS_ENABLED=False on your deployed instance
+4. POST with the response as your post body, to http://localhost:8080/backup/restore 
 
