@@ -1,7 +1,8 @@
 from django.db import models
 from django.utils.text import slugify
 from django.utils import timezone
-
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 # Documentation : https://docs.djangoproject.com/en/6.1/topics/db/models/
 
@@ -89,6 +90,13 @@ class SluggedModel(models.Model):
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
 
+class LikableModel(models.Model):
+    """Adds a likes counter to the model"""
+    likes = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        abstract = True
+
 #########################
 ## Tags, shared by all ##
 #########################
@@ -130,7 +138,7 @@ class GenericPage(SluggedModel):
 
 ### SNS SAMPLE PACKS
 
-class SoundsAndScapesPack(PublishableModel,SluggedModel):
+class SoundsAndScapesPack(PublishableModel,SluggedModel,LikableModel):
     title = models.CharField(max_length=255)
     cover_image_url = models.URLField(blank=True)
     external_url = models.URLField(help_text="Link to where the sample pack is downloadable from")
@@ -139,7 +147,6 @@ class SoundsAndScapesPack(PublishableModel,SluggedModel):
     file_list = models.JSONField(default=dict, blank=True)
     release_date = models.DateField()
     updated_date = models.DateField()
-    likes = models.IntegerField(default=0)
 
     class Meta:
         ordering = ["-release_date"]
@@ -184,14 +191,13 @@ class SnSChangelogEntryTranslation(models.Model):
 
 ### MUSIC RELEASES
 
-class MusicRelease(PublishableModel, SluggedModel):
+class MusicRelease(PublishableModel, SluggedModel, LikableModel):
     title = models.CharField(max_length=255)
     cover_image_url = models.URLField(blank=True)
     release_date = models.DateField()
     tags = models.ManyToManyField(Tag, blank=True, related_name="music_release")
     streaming_links = models.JSONField(default=dict, blank=True)
     extras = models.JSONField(default=dict, blank=True)
-    likes = models.IntegerField(default=0)
 
     class Meta:
         ordering = ["-release_date"]
@@ -217,7 +223,7 @@ class MusicReleaseTranslation(models.Model):
 def videoextras_defaults():
     return{}
 
-class Video(PublishableModel):
+class Video(PublishableModel,LikableModel):
     youtube_id = models.CharField(max_length=11, unique=True) # NOTE: Possible point of failure in the future if YouTube changes its implementation
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     internal_title = models.CharField(max_length=255)
@@ -256,7 +262,7 @@ class VideoTranslation(models.Model):
 def articleextras_defaults():
     return {}
 
-class Article(PublishableModel, SluggedModel):
+class Article(PublishableModel, SluggedModel, LikableModel):
     title = models.CharField(max_length=255)
     content_language = models.CharField(max_length=3, choices=LANGUAGES, default="fi")
     article_image_url = models.URLField(blank=True)
@@ -270,7 +276,6 @@ class Article(PublishableModel, SluggedModel):
     ingress = models.TextField(blank=True)
     body_markdown = models.TextField(blank=True)
     article_extras = models.JSONField(blank=True, null=True)
-    likes = models.IntegerField(default=0)
 
     class Meta:
         ordering = ["-published_date"]

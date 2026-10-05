@@ -32,3 +32,20 @@ class ViewCount(models.Model):
 
     class Meta:
         unique_together = ('content_type', 'object_id')
+
+class LikeEvent(models.Model):
+    '''
+    Like event: similar to view counts, record unique visitors' hashes and the generic content type the user liked to avoid duplicate likes from same user
+    '''
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    visitor_hash = models.CharField(max_length=64, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['content_type', 'object_id', 'created_at']),
+        ]
+        unique_together = ('content_type','object_id','visitor_hash')
