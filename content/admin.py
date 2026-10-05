@@ -101,7 +101,7 @@ class MusicReleaseTranslationInline(admin.TabularInline):
 class MusicReleaseAdmin(admin.ModelAdmin):
     form = MusicReleaseForm
     inlines = [MusicReleaseTranslationInline]
-    list_display = ("title", "release_date", "published", "slug")
+    list_display = ("title", "release_date", "likes", "published", "slug")
     list_filter = ("published",)
     search_fields = ("title",)
     prepopulated_fields = {"slug": ("title",)}
@@ -123,7 +123,7 @@ class VideoTranslationInLine(admin.TabularInline):
 class VideoAdmin(admin.ModelAdmin):
     form = VideoForm
     inlines = [VideoTranslationInLine]
-    list_display = ("internal_title", "youtube_id", "published_date", "published")
+    list_display = ("internal_title", "youtube_id", "likes", "published_date", "published")
     list_filter = ("published",)
     search_fields = ("internal_title", "youtube_id", "category")
     actions = [make_published, make_unpublished]
@@ -160,7 +160,7 @@ class ArticleTranslationInline(admin.StackedInline):
 class ArticleAdmin(admin.ModelAdmin):
     form = ArticleForm
     inlines = [ArticleTranslationInline]
-    list_display = ("title", "published_date", "updated_at", "published", "category", "external_url","slug")
+    list_display = ("title", "published_date", "updated_at", "published", "likes", "category", "external_url","slug")
     list_filter = ("published",)
     search_fields = ("title","category","body_markdown","description","tags__name")
     prepopulated_fields = {"slug": ("title",)}
