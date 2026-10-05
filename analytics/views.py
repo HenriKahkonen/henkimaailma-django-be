@@ -1,14 +1,15 @@
 from datetime import timedelta
-from django.db import models as db_models
+from django.db import models as db_models, transaction
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import status, throttling
 import hashlib
 from django.utils import timezone
+from django.db.models import F
 
-from analytics.models import ViewEvent, ViewCount
-from analytics.serializers import TrackViewSerializer
+from analytics.models import ViewEvent, ViewCount, LikeEvent
+from analytics.serializers import TrackViewSerializer, LikeToggleSerializer
 
 ##############################
 ## Count unique page visits ##
@@ -62,3 +63,51 @@ class TrackViewAPIView(APIView):
             counted = True
 
         return Response({'status': 'ok', 'counted': counted}, status=status.HTTP_200_OK)
+
+#################
+## Like toggle ##
+#################
+
+class LikeToggleThrottle(throttling.AnonRateThrottle):
+    scope = 'like_toggle'
+
+class LikeToggleAPIView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [LikeToggleThrottle]
+
+    def post(self, request):
+        serializer = LikeToggleSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        content_type = serializer.validated_data['content_type']
+        object_id = serializer.validated_data['object_id']
+        obj = serializer.validated_data['obj']
+
+        ip = request.META.get('REMOTE_ADDR', '')
+        ua = request.META.get('HTTP_USER_AGENT', '')
+        # Note: no date component, so that the same user may not like the same object multiple times over several days
+        visitor_hash = hashlib.sha256(f"{ip}{ua}".encode()).hexdigest()
+
+        with transaction.atomic():
+            existing = LikeEvent.objects.filter(
+                content_type=content_type,
+                object_id=object_id,
+                visitor_hash=visitor_hash,
+            ).first()
+
+            if existing:
+                existing.delete()
+                type(obj).objects.filter(pk=obj.pk).update(likes=F('likes') - 1)
+                liked = False
+            else:
+                LikeEvent.objects.create(
+                    content_type=content_type,
+                    object_id=object_id,
+                    visitor_hash=visitor_hash,
+                )
+                type(obj).objects.filter(pk=obj.pk).update(likes=F('likes') + 1)
+                liked = True
+
+            new_count = type(obj).objects.filter(pk=obj.pk).values_list('likes', flat=True).first()
+
+        return Response({'liked': liked, 'likes': new_count}, status=status.HTTP_200_OK)

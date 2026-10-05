@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from content.views import GetChangelogView, GetReviewsListView, VideoDetailView, ArticleDetailView, GetSnSData, GetArticlesListView
-from analytics.views import TrackViewAPIView
+from analytics.views import TrackViewAPIView, LikeToggleAPIView
 from django.conf import settings
 
 urlpatterns = [
@@ -34,8 +34,9 @@ urlpatterns = [
         path("videos/<slug:slug>/", VideoDetailView.as_view()),
         path("articles/<slug:slug>/", ArticleDetailView.as_view()),
 
-    # Analytics and page view tracking endpoints
-        path("analytics/", TrackViewAPIView.as_view())
+    # Analytics: like and page view tracking endpoints
+        path("analytics/", TrackViewAPIView.as_view()),
+        path("like/", LikeToggleAPIView.as_view())
 ]
 
 if settings.DEBUG:
