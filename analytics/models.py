@@ -48,3 +48,4 @@ class LikeEvent(models.Model):
         indexes = [
             models.Index(fields=['content_type', 'object_id', 'created_at']),
         ]
+        unique_together = ('content_type','object_id','visitor_hash')
