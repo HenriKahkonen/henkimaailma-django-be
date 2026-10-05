@@ -59,7 +59,7 @@ INSTALLED_APPS = [
 REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'view_track': '30/min',
-        'like_toggle':'10/min',
+        'like_toggle':'25/min',
     }
 }
 
